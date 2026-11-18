@@ -7,6 +7,28 @@ pipeline {
     }
 
     stages {
+        stage('Notify Started') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'telegram-bot-token-vandung', variable: 'TELEGRAM_BOT_TOKEN'),
+                    string(credentialsId: 'telegram-chat-id-vandung', variable: 'TELEGRAM_CHAT_ID')
+                ]) {
+                    sh '''
+                        set +x
+                        MESSAGE="🚀 PHE PHIM - BUILD STARTED
+Project: ${JOB_NAME}
+Build: #${BUILD_NUMBER}
+URL: ${BUILD_URL}"
+
+                        curl -sS --fail \
+                          -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                          --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+                          --data-urlencode "text=${MESSAGE}"
+                    '''
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -38,10 +60,47 @@ pipeline {
 
     post {
         success {
-            echo 'PHÊ PHIM CI SUCCESS'
+            withCredentials([
+                string(credentialsId: 'telegram-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
+                string(credentialsId: 'telegram-chat-id', variable: 'TELEGRAM_CHAT_ID')
+            ]) {
+                sh '''
+                    set +x
+                    MESSAGE="✅ PHE PHIM - BUILD SUCCESS
+Project: ${JOB_NAME}
+Build: #${BUILD_NUMBER}
+Branch: ${BRANCH_NAME}
+Commit: ${GIT_COMMIT}
+URL: ${BUILD_URL}"
+
+                    curl -sS --fail \
+                      -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+                      --data-urlencode "text=${MESSAGE}"
+                '''
+            }
         }
+
         failure {
-            echo 'PHÊ PHIM CI FAILED'
+            withCredentials([
+                string(credentialsId: 'telegram-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
+                string(credentialsId: 'telegram-chat-id', variable: 'TELEGRAM_CHAT_ID')
+            ]) {
+                sh '''
+                    set +x
+                    MESSAGE="❌ PHE PHIM - BUILD FAILURE
+Project: ${JOB_NAME}
+Build: #${BUILD_NUMBER}
+Branch: ${BRANCH_NAME}
+Commit: ${GIT_COMMIT}
+URL: ${BUILD_URL}"
+
+                    curl -sS --fail \
+                      -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+                      --data-urlencode "text=${MESSAGE}"
+                '''
+            }
         }
     }
 }
