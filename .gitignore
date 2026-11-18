@@ -1,0 +1,6 @@
+
+backend/.env
+
+*.bak
+
+node_modules/
