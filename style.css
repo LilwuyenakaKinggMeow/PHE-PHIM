@@ -1676,3 +1676,28 @@ button {
         text-align: left;
     }
 }
+.brand-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 13px;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+}
+.seat-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 36px;
+    padding: 20px 10px;
+    overflow-x: auto;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}

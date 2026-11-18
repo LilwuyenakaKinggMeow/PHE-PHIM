@@ -187,7 +187,7 @@ const appState = {
     currentMovie: MOVIES_DATA[0],
     currentShowtime: MOVIES_DATA[0].showtimes[1],
 
-    selectedCinema: "CineLux Vincom Center",
+    selectedCinema: "ĐÀ NẴNG",
 
     selectedSeats: [],
 
