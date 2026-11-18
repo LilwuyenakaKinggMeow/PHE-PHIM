@@ -1,4 +1,9 @@
+
 "use strict";
+
+// ==============================
+// DANH SÁCH SUẤT CHIẾU
+// ==============================
 
 const SHOWTIMES = [
     "09:00",
@@ -7,6 +12,10 @@ const SHOWTIMES = [
     "17:00",
     "20:30"
 ];
+
+// ==============================
+// DỮ LIỆU PHIM
+// ==============================
 
 const MOVIES_DATA = [
     {
@@ -146,9 +155,15 @@ const MOVIES_DATA = [
     }
 ];
 
+// ==============================
+// BIẾN TOÀN CỤC
+// ==============================
+
 const $ = (id) => document.getElementById(id);
 
 let selectedMovie = null;
+
+window.selectedMovie = null;
 window.selectedShowtime = null;
 
 // ==============================
@@ -319,33 +334,50 @@ function initBookingPage() {
         return;
     }
 
+    // Chia sẻ thông tin phim với booking.js
+    window.selectedMovie = selectedMovie;
+
+    // Reset suất chiếu khi vào trang
     window.selectedShowtime = null;
 
-    // 1. Gán ảnh nền mờ nghệ thuật cho Backdrop Banner
-    const backdropBg = document.getElementById("movieBackdropBg");
+    // ==============================
+    // BACKDROP BANNER
+    // ==============================
+
+    const backdropBg = $("movieBackdropBg");
+
     if (backdropBg) {
-        backdropBg.style.backgroundImage = `url("${selectedMovie.poster}")`;
+        backdropBg.style.backgroundImage =
+            `url("${selectedMovie.poster}")`;
     }
 
-    // 2. Hiển thị poster chính trực quan bằng thẻ <img> tại Banner
-    const posterContainer = document.getElementById("movieDetailPosterContainer");
+    // ==============================
+    // POSTER PHIM
+    // ==============================
+
+    const posterContainer = $("movieDetailPosterContainer");
+
     if (posterContainer) {
         posterContainer.replaceChildren();
-        
+
         const img = document.createElement("img");
+
         img.src = selectedMovie.poster;
         img.alt = `Poster phim ${selectedMovie.title}`;
         img.loading = "lazy";
-        
+
         img.onerror = () => {
             img.onerror = null;
             img.src = selectedMovie.fallback;
         };
-        
+
         posterContainer.append(img);
     }
 
-    // Hiển thị thông tin phim
+    // ==============================
+    // THÔNG TIN PHIM
+    // ==============================
+
     if ($("movieDetailTitle")) {
         $("movieDetailTitle").textContent = selectedMovie.title;
     }
@@ -363,7 +395,10 @@ function initBookingPage() {
         $("movieDetailGenre").textContent = selectedMovie.genre;
     }
 
-    // Cập nhật thông tin tóm tắt đặt vé ở sidebar bên phải
+    // ==============================
+    // THÔNG TIN SIDEBAR
+    // ==============================
+
     if ($("summaryTitle")) {
         $("summaryTitle").textContent = selectedMovie.title;
     }
@@ -380,7 +415,10 @@ function initBookingPage() {
         $("summaryThumb").style.backgroundPosition = "center";
     }
 
-    // Hiển thị thời lượng nếu có trong dữ liệu
+    // ==============================
+    // THỜI LƯỢNG PHIM
+    // ==============================
+
     const durationMatch = selectedMovie.genre.match(/(\d+)\s*phút/i);
 
     if ($("summaryDuration")) {
@@ -389,8 +427,16 @@ function initBookingPage() {
             : "Chưa cập nhật";
     }
 
-    // Hiển thị suất chiếu
+    // ==============================
+    // SUẤT CHIẾU
+    // ==============================
+
     renderShowtimes();
+
+    // Cập nhật trạng thái nút thanh toán
+    if (typeof window.updateCheckoutButton === "function") {
+        window.updateCheckoutButton();
+    }
 }
 
 // ==============================
@@ -412,17 +458,19 @@ function renderShowtimes() {
         button.textContent = time;
 
         button.addEventListener("click", () => {
+            // Lưu suất chiếu đã chọn
             window.selectedShowtime = time;
 
+            // Cập nhật trạng thái nút
             container.querySelectorAll("button").forEach(item => {
                 item.classList.remove("active");
             });
 
             button.classList.add("active");
 
-            // Cập nhật lại trạng thái thanh toán mà KHÔNG xóa ghế đã chọn
-            if (typeof window.updateSelectedSeats === "function") {
-                window.updateSelectedSeats();
+            // Cập nhật điều kiện thanh toán
+            if (typeof window.updateCheckoutButton === "function") {
+                window.updateCheckoutButton();
             }
         });
 
@@ -431,16 +479,17 @@ function renderShowtimes() {
 }
 
 // ==============================
-// KHỞI ĐỘNG
+// KHỞI ĐỘNG ỨNG DỤNG
 // ==============================
 
 function init() {
+    // Trang chủ
     if ($("movieCardsRow")) {
         initHomePage();
     }
 
-    // Kiểm tra trang đặt vé thông qua element của banner mới
-    if (document.getElementById("movieBackdropBg") || $("movieDetailTitle")) {
+    // Trang đặt vé
+    if ($("movieBackdropBg") || $("movieDetailTitle")) {
         initBookingPage();
     }
 }

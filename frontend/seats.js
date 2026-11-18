@@ -1,6 +1,10 @@
+
 "use strict";
 
-// Cấu hình sơ đồ ghế
+// ==============================
+// CẤU HÌNH GHẾ
+// ==============================
+
 const SEAT_ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 const SEAT_CONFIG = {
@@ -11,37 +15,42 @@ const SEAT_CONFIG = {
 
 const MAX_SEATS = 6;
 
-// Trạng thái ghế
+// ==============================
+// TRẠNG THÁI GHẾ
+// ==============================
+
 const seatState = {
     selectedSeats: [],
     seats: []
 };
 
-// Tạo dữ liệu ghế
+// Chia sẻ trạng thái ghế với booking.js
+window.seatState = seatState;
+
+// ==============================
+// TẠO DỮ LIỆU GHẾ
+// ==============================
+
 function createSeatData() {
     const seats = [];
 
     SEAT_ROWS.forEach(row => {
-        const isSweetbox = row === "H";
-        const isVip = ["D", "E", "F", "G"].includes(row);
+        // Hàng H dành cho ghế đôi
+        const seatCount = row === "H" ? 6 : 12;
 
-        const total = isSweetbox ? 6 : 12;
+        for (let i = 1; i <= seatCount; i++) {
+            const code = row + i;
 
-        for (let col = 1; col <= total; col++) {
-            const code = isSweetbox
-                ? `${row}${col * 2 - 1}-${col * 2}`
-                : `${row}${col}`;
+            let type = "standard";
 
-            const type = isSweetbox
-                ? "sweetbox"
-                : isVip
-                    ? "vip"
-                    : "standard";
+            if (row === "H") {
+                type = "sweetbox";
+            } else if (["D", "E", "F", "G"].includes(row)) {
+                type = "vip";
+            }
 
             seats.push({
-                id: code,
                 code,
-                row,
                 type,
                 price: SEAT_CONFIG[type],
                 status: "available"
@@ -52,74 +61,101 @@ function createSeatData() {
     return seats;
 }
 
-// Hiển thị sơ đồ ghế
+// ==============================
+// TẠO PHẦN TỬ GHẾ
+// ==============================
+
+function createSeatElement(seat) {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "seat";
+    button.textContent = seat.code;
+
+    button.dataset.seat = seat.code;
+    button.dataset.type = seat.type;
+
+    // Phân loại ghế
+    if (seat.type === "standard") {
+        button.classList.add("standard");
+    }
+
+    if (seat.type === "vip") {
+        button.classList.add("vip");
+    }
+
+    if (seat.type === "sweetbox") {
+        button.classList.add("sweetbox");
+    }
+
+    // Kiểm tra ghế đã chọn
+    if (seatState.selectedSeats.includes(seat.code)) {
+        button.classList.add("selected");
+        button.setAttribute("aria-pressed", "true");
+    } else {
+        button.setAttribute("aria-pressed", "false");
+    }
+
+    // Sự kiện chọn ghế
+    button.addEventListener("click", () => {
+        toggleSeat(seat.code);
+    });
+
+    return button;
+}
+
+// ==============================
+// HIỂN THỊ SƠ ĐỒ GHẾ
+// ==============================
+
 function renderSeatSelection() {
-    const grid = document.getElementById("seatGrid");
+    const container = document.getElementById("seatGrid");
 
-    if (!grid) return;
+    if (!container) return;
 
-    grid.replaceChildren();
+    container.replaceChildren();
 
     SEAT_ROWS.forEach(row => {
         const rowElement = document.createElement("div");
+
         rowElement.className = "seat-row";
+        rowElement.dataset.row = row;
 
-        const label = document.createElement("span");
-        label.className = "row-label";
-        label.textContent = row;
-
-        const container = document.createElement("div");
-        container.className = "seats-in-row";
-
-        const rowSeats = seatState.seats.filter(
-            seat => seat.row === row
+        const rowSeats = seatState.seats.filter(seat =>
+            seat.code.startsWith(row)
         );
 
-        rowSeats.forEach((seat, index) => {
-            if (
-                (row !== "H" && index === 6) ||
-                (row === "H" && index === 3)
-            ) {
-                const gap = document.createElement("div");
-                gap.className = "seat-gap";
-                container.append(gap);
-            }
+        rowSeats.forEach(seat => {
+            const seatElement = createSeatElement(seat);
 
-            const button = document.createElement("button");
-
-            button.type = "button";
-            button.className = `seat ${seat.type}`;
-            button.textContent = seat.code;
-
-            if (seatState.selectedSeats.includes(seat.code)) {
-                button.classList.add("selected");
-            }
-
-            button.addEventListener("click", () => {
-                toggleSeat(seat.code);
-            });
-
-            container.append(button);
+            rowElement.appendChild(seatElement);
         });
 
-        const rightLabel = label.cloneNode(true);
-
-        rowElement.append(label, container, rightLabel);
-        grid.append(rowElement);
+        container.appendChild(rowElement);
     });
 
     updateSelectedSeats();
+
+    // Cập nhật điều kiện thanh toán
+    if (typeof window.updateCheckoutButton === "function") {
+        window.updateCheckoutButton();
+    }
 }
 
-// Chọn hoặc bỏ chọn ghế
+// ==============================
+// CHỌN / BỎ CHỌN GHẾ
+// ==============================
+
 function toggleSeat(code) {
     const index = seatState.selectedSeats.indexOf(code);
 
-    if (index >= 0) {
+    // Nếu ghế đã được chọn thì bỏ chọn
+    if (index !== -1) {
         seatState.selectedSeats.splice(index, 1);
     } else {
+        // Giới hạn số lượng ghế
         if (seatState.selectedSeats.length >= MAX_SEATS) {
-            alert(`Bạn chỉ được chọn tối đa ${MAX_SEATS} ghế.`);
+            alert(`Bạn chỉ được chọn tối đa ${MAX_SEATS} ghế!`);
             return;
         }
 
@@ -129,71 +165,87 @@ function toggleSeat(code) {
     renderSeatSelection();
 }
 
-// Cập nhật thông tin ghế
+// ==============================
+// CẬP NHẬT GHẾ ĐÃ CHỌN
+// ==============================
+
 function updateSelectedSeats() {
     const countElement = document.getElementById("selectedCountNum");
     const container = document.getElementById("selectedSeatsContainer");
     const totalElement = document.getElementById("totalAmountText");
     const clearBtn = document.getElementById("clearAllSeats");
-    const checkoutBtn = document.getElementById("checkoutBtn");
 
     const selected = seatState.seats.filter(seat =>
         seatState.selectedSeats.includes(seat.code)
     );
 
+    // Tổng tiền
     const total = selected.reduce(
         (sum, seat) => sum + seat.price,
         0
     );
 
+    // Cập nhật số lượng ghế
     if (countElement) {
         countElement.textContent = selected.length;
     }
 
+    // Cập nhật danh sách ghế
     if (container) {
-        if (selected.length > 0) {
-            container.textContent = selected
-                .map(seat => seat.code)
-                .join(", ");
+        container.replaceChildren();
+
+        if (selected.length === 0) {
+            const empty = document.createElement("div");
+
+            empty.className = "empty-seats-placeholder";
+            empty.textContent = "Vui lòng chọn ghế yêu thích bên dưới.";
+
+            container.appendChild(empty);
         } else {
-            container.innerHTML = `
-                <div class="empty-seats-placeholder">
-                    Vui lòng chọn ghế yêu thích bên dưới.
-                </div>
-            `;
+            selected.forEach(seat => {
+                const item = document.createElement("div");
+
+                item.className = "selected-seat-item";
+                item.textContent =
+                    `${seat.code} · ${seat.price.toLocaleString("vi-VN")} đ`;
+
+                container.appendChild(item);
+            });
         }
     }
 
+    // Cập nhật tổng tiền
     if (totalElement) {
         totalElement.textContent =
-            new Intl.NumberFormat("vi-VN").format(total) + " đ";
+            total.toLocaleString("vi-VN") + " đ";
     }
 
-    // Hiện hoặc ẩn nút Xóa tất cả
+    // Cập nhật nút xóa ghế
     if (clearBtn) {
+        clearBtn.disabled = selected.length === 0;
         clearBtn.classList.toggle("hidden", selected.length === 0);
     }
 
-    // Thanh toán bật khi: Đã chọn ít nhất 1 ghế VÀ Đã chọn suất chiếu
-    if (checkoutBtn) {
-        checkoutBtn.disabled =
-            selected.length === 0 || !window.selectedShowtime;
+    // Cập nhật nút thanh toán
+    if (typeof window.updateCheckoutButton === "function") {
+        window.updateCheckoutButton();
     }
 }
 
-// Cho phép script.js gọi hàm này
-window.updateSelectedSeats = updateSelectedSeats;
+// ==============================
+// XÓA TOÀN BỘ GHẾ ĐÃ CHỌN
+// ==============================
 
-// Xóa toàn bộ ghế đang chọn
 function resetSelectedSeats() {
     seatState.selectedSeats = [];
+
     renderSeatSelection();
 }
 
-// Cho phép script.js gọi hàm này
-window.resetSelectedSeats = resetSelectedSeats;
+// ==============================
+// SỰ KIỆN XÓA GHẾ
+// ==============================
 
-// Gắn sự kiện nút Xóa tất cả
 function setupClearSeatsButton() {
     const clearBtn = document.getElementById("clearAllSeats");
 
@@ -204,16 +256,33 @@ function setupClearSeatsButton() {
     });
 }
 
-// Khởi tạo sơ đồ ghế
-function initSeatSelection() {
-    const grid = document.getElementById("seatGrid");
+// ==============================
+// KHỞI TẠO SƠ ĐỒ GHẾ
+// ==============================
 
-    if (!grid) return;
+function initSeatSelection() {
+    const container = document.getElementById("seatGrid");
+
+    // Chỉ chạy tại trang đặt vé
+    if (!container) return;
 
     seatState.seats = createSeatData();
 
     renderSeatSelection();
+
     setupClearSeatsButton();
 }
+
+// ==============================
+// CHIA SẺ HÀM VỚI FILE KHÁC
+// ==============================
+
+window.updateSelectedSeats = updateSelectedSeats;
+window.resetSelectedSeats = resetSelectedSeats;
+window.renderSeatSelection = renderSeatSelection;
+
+// ==============================
+// KHỞI ĐỘNG
+// ==============================
 
 document.addEventListener("DOMContentLoaded", initSeatSelection);
