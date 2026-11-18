@@ -61,8 +61,8 @@ URL: ${BUILD_URL}"
     post {
         success {
             withCredentials([
-                string(credentialsId: 'telegram-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
-                string(credentialsId: 'telegram-chat-id', variable: 'TELEGRAM_CHAT_ID')
+                string(credentialsId: 'telegram-bot-token-vandung', variable: 'TELEGRAM_BOT_TOKEN'),
+                string(credentialsId: 'telegram-chat-id-vandung', variable: 'TELEGRAM_CHAT_ID')
             ]) {
                 sh '''
                     set +x
