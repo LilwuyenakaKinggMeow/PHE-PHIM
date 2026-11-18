@@ -1,194 +1,116 @@
 
 "use strict";
 
-// ==============================
-// CẤU HÌNH GHẾ
-// ==============================
+// ========================================
+// CAU HINH GHE - PHE PHIM
+// ========================================
 
-const SEAT_CONFIG = {
-    standard: 85000,
-    vip: 115000,
-    sweetbox: 240000
-};
+const SEAT_ROWS = [
+    "A", "B", "C", "D", "E",
+    "F", "G", "H", "I", "J"
+];
 
-const MAX_SEATS = 6;
-const SEAT_API_URL = "http://localhost:3000/api/seats";
+const SEAT_PRICE = 75000;
 
-// ==============================
-// TRẠNG THÁI GHẾ
-// ==============================
+// API xac nhan hien tai moi ho tro 1 ghe/lan
+const MAX_SEATS = 1;
 
 const seatState = {
     selectedSeats: [],
-    seats: [],
-    loading: false
+    seats: []
 };
 
-window.seatState = seatState;
-
-// ==============================
-// TẢI GHẾ TỪ DATABASE
-// ==============================
-
-async function loadSeats() {
-    const container = document.getElementById("seatGrid");
-
-    if (!container) return;
-
-    const showtimeId = window.selectedShowtimeId;
-
-    if (!showtimeId) {
-        container.innerHTML =
-            '<p class="seat-message">Vui lòng chọn suất chiếu để xem sơ đồ ghế.</p>';
-        seatState.seats = [];
-        seatState.selectedSeats = [];
-        updateSelectedSeats();
-        return;
-    }
-
-    seatState.loading = true;
-
-    container.innerHTML =
-        '<p class="seat-message">Đang tải sơ đồ ghế...</p>';
-
-    try {
-        const response = await fetch(
-            `${SEAT_API_URL}?showtime=${encodeURIComponent(showtimeId)}`
-        );
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Không thể tải sơ đồ ghế.");
-        }
-
-        seatState.seats = result.data.map(item => ({
-            id: item.id,
-            cinemaId: item.cinema_id,
-            code: item.seat_code,
-            type: item.seat_type,
-            price: SEAT_CONFIG[item.seat_type] || SEAT_CONFIG.standard,
-            status: item.status
-        }));
-
-        // Loại bỏ ghế đã không còn trong danh sách hoặc đã được đặt
-        seatState.selectedSeats = seatState.selectedSeats.filter(code =>
-            seatState.seats.some(seat =>
-                seat.code === code && seat.status === "available"
-            )
-        );
-
-        renderSeatSelection();
-
-    } catch (error) {
-        console.error("Load seats error:", error);
-
-        container.innerHTML =
-            '<p class="seat-message">Không thể tải sơ đồ ghế. Vui lòng thử lại.</p>';
-
-    } finally {
-        seatState.loading = false;
-    }
-}
-
-// ==============================
-// TẠO PHẦN TỬ GHẾ
-// ==============================
-
-function createSeatElement(seat) {
-    const button = document.createElement("button");
-
-    button.type = "button";
-    button.className = "seat";
-    button.textContent = seat.code;
-
-    button.dataset.seat = seat.code;
-    button.dataset.type = seat.type;
-    button.dataset.id = seat.id;
-
-    button.classList.add(seat.type);
-
-    if (seat.status === "booked") {
-        button.classList.add("booked");
-        button.disabled = true;
-        button.title = "Ghế đã được đặt";
-    } else if (seat.status === "held") {
-        button.classList.add("held");
-        button.disabled = true;
-        button.title = "Ghế đang được giữ";
-    } else {
-        button.disabled = false;
-
-        if (seatState.selectedSeats.includes(seat.code)) {
-            button.classList.add("selected");
-            button.setAttribute("aria-pressed", "true");
-        } else {
-            button.setAttribute("aria-pressed", "false");
-        }
-
-        button.addEventListener("click", () => {
-            toggleSeat(seat.code);
-        });
-    }
-
-    return button;
-}
-
-// ==============================
-// HIỂN THỊ SƠ ĐỒ GHẾ
-// ==============================
+// ========================================
+// HIEN THI SO DO GHE
+// ========================================
 
 function renderSeatSelection() {
-    const container = document.getElementById("seatGrid");
+    const grid = document.getElementById("seatGrid");
 
-    if (!container) return;
+    if (!grid) return;
 
-    container.replaceChildren();
+    grid.replaceChildren();
 
-    const rows = [...new Set(
-        seatState.seats.map(seat => seat.code.charAt(0))
-    )];
-
-    rows.forEach(row => {
+    SEAT_ROWS.forEach(row => {
         const rowElement = document.createElement("div");
-
         rowElement.className = "seat-row";
-        rowElement.dataset.row = row;
 
-        const rowSeats = seatState.seats.filter(seat =>
-            seat.code.startsWith(row)
+        const label = document.createElement("span");
+        label.className = "row-label";
+        label.textContent = row;
+
+        const container = document.createElement("div");
+        container.className = "seats-in-row";
+
+        const rowSeats = seatState.seats.filter(
+            seat => seat.row === row
         );
 
-        rowSeats.forEach(seat => {
-            rowElement.appendChild(createSeatElement(seat));
+        rowSeats.forEach((seat, index) => {
+            if (index === 5) {
+                const gap = document.createElement("div");
+                gap.className = "seat-gap";
+                container.append(gap);
+            }
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = `seat ${seat.type}`;
+            button.textContent = seat.code;
+            button.title = `${seat.code} - ${seat.status}`;
+
+            if (seat.status === "sold") {
+                button.classList.add("sold");
+                button.disabled = true;
+            }
+
+            if (seat.status === "held") {
+                button.classList.add("held");
+                button.disabled = true;
+            }
+
+            if (seatState.selectedSeats.includes(seat.code)) {
+                button.classList.add("selected");
+            }
+
+            button.addEventListener("click", () => {
+                toggleSeat(seat.code);
+            });
+
+            container.append(button);
         });
 
-        container.appendChild(rowElement);
+        const rightLabel = label.cloneNode(true);
+
+        rowElement.append(label, container, rightLabel);
+        grid.append(rowElement);
     });
 
     updateSelectedSeats();
-
-    if (typeof window.updateCheckoutButton === "function") {
-        window.updateCheckoutButton();
-    }
 }
 
-// ==============================
-// CHỌN / BỎ CHỌN GHẾ
-// ==============================
+// ========================================
+// CHON GHE
+// ========================================
 
 function toggleSeat(code) {
-    const seat = seatState.seats.find(item => item.code === code);
+    const seat = seatState.seats.find(
+        item => item.code === code
+    );
 
-    if (!seat || seat.status !== "available") return;
+    if (!seat || seat.status !== "available") {
+        alert("Ghế này không còn khả dụng.");
+        return;
+    }
 
     const index = seatState.selectedSeats.indexOf(code);
 
-    if (index !== -1) {
+    if (index >= 0) {
         seatState.selectedSeats.splice(index, 1);
     } else {
         if (seatState.selectedSeats.length >= MAX_SEATS) {
-            alert(`Bạn chỉ được chọn tối đa ${MAX_SEATS} ghế!`);
+            alert("Hiện tại chỉ hỗ trợ đặt 1 ghế mỗi lần.");
             return;
         }
 
@@ -198,18 +120,28 @@ function toggleSeat(code) {
     renderSeatSelection();
 }
 
-// ==============================
-// CẬP NHẬT GHẾ ĐÃ CHỌN
-// ==============================
+// ========================================
+// CAP NHAT THONG TIN DAT VE
+// ========================================
 
 function updateSelectedSeats() {
-    const countElement = document.getElementById("selectedCountNum");
-    const container = document.getElementById("selectedSeatsContainer");
-    const totalElement = document.getElementById("totalAmountText");
-    const clearBtn = document.getElementById("clearAllSeats");
+    const countElement =
+        document.getElementById("selectedCountNum");
 
-    const selected = seatState.seats.filter(seat =>
-        seatState.selectedSeats.includes(seat.code)
+    const container =
+        document.getElementById("selectedSeatsContainer");
+
+    const totalElement =
+        document.getElementById("totalAmountText");
+
+    const clearBtn =
+        document.getElementById("clearAllSeats");
+
+    const checkoutBtn =
+        document.getElementById("checkoutBtn");
+
+    const selected = seatState.seats.filter(
+        seat => seatState.selectedSeats.includes(seat.code)
     );
 
     const total = selected.reduce(
@@ -222,94 +154,149 @@ function updateSelectedSeats() {
     }
 
     if (container) {
-        container.replaceChildren();
-
-        if (selected.length === 0) {
-            const empty = document.createElement("div");
-
-            empty.className = "empty-seats-placeholder";
-            empty.textContent = "Vui lòng chọn ghế yêu thích bên dưới.";
-
-            container.appendChild(empty);
+        if (selected.length > 0) {
+            container.textContent = selected
+                .map(seat => seat.code)
+                .join(", ");
         } else {
-            selected.forEach(seat => {
-                const item = document.createElement("div");
-
-                item.className = "selected-seat-item";
-                item.textContent =
-                    `${seat.code} · ${seat.price.toLocaleString("vi-VN")} đ`;
-
-                container.appendChild(item);
-            });
+            container.innerHTML =
+                '<div class="empty-seats-placeholder">' +
+                'Vui lòng chọn ghế yêu thích bên dưới.' +
+                '</div>';
         }
     }
 
     if (totalElement) {
         totalElement.textContent =
-            total.toLocaleString("vi-VN") + " đ";
+            new Intl.NumberFormat("vi-VN").format(total) +
+            " đ";
     }
 
     if (clearBtn) {
-        clearBtn.disabled = selected.length === 0;
-        clearBtn.classList.toggle("hidden", selected.length === 0);
+        clearBtn.classList.toggle(
+            "hidden",
+            selected.length === 0
+        );
     }
 
-    if (typeof window.updateCheckoutButton === "function") {
-        window.updateCheckoutButton();
+    if (checkoutBtn) {
+        checkoutBtn.disabled =
+            selected.length === 0 ||
+            !window.selectedShowtimeId;
     }
 }
 
-// ==============================
-// XÓA TOÀN BỘ GHẾ ĐÃ CHỌN
-// ==============================
+window.updateSelectedSeats = updateSelectedSeats;
+
+// ========================================
+// XOA GHE DA CHON
+// ========================================
 
 function resetSelectedSeats() {
     seatState.selectedSeats = [];
     renderSeatSelection();
 }
 
-// ==============================
-// SỰ KIỆN XÓA GHẾ
-// ==============================
+window.resetSelectedSeats = resetSelectedSeats;
+
+// ========================================
+// LAY 100 GHE TU POSTGRESQL + REDIS
+// ========================================
+
+async function loadSeatsFromAPI(showtimeId) {
+    const grid = document.getElementById("seatGrid");
+
+    if (!grid) return;
+
+    // Khong cho dat ve trong luc tai du lieu
+    seatState.seats = [];
+    seatState.selectedSeats = [];
+    grid.textContent = "Đang tải sơ đồ ghế...";
+    updateSelectedSeats();
+
+    try {
+        const response = await fetch(
+            `http://localhost:3000/api/seats?showtimeId=${showtimeId}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Không thể tải ghế");
+        }
+
+        const data = await response.json();
+
+        // Bo qua ket qua cu neu nguoi dung doi suat chieu
+        if (window.selectedShowtimeId !== showtimeId) {
+            return;
+        }
+
+        if (!data.success || !Array.isArray(data.seats)) {
+            throw new Error("Dữ liệu ghế không hợp lệ");
+        }
+
+        seatState.seats = data.seats.map(seat => ({
+            id: seat.seatCode,
+            code: seat.seatCode,
+            row: seat.seatCode.charAt(0),
+            type: "standard",
+            price: SEAT_PRICE,
+            status: seat.status
+        }));
+
+        seatState.selectedSeats = [];
+
+        renderSeatSelection();
+
+        console.log(
+            `Đã tải ${seatState.seats.length} ghế`,
+            seatState.seats
+        );
+
+    } catch (error) {
+        console.error("Seat API error:", error);
+
+        if (window.selectedShowtimeId !== showtimeId) {
+            return;
+        }
+
+        seatState.seats = [];
+        seatState.selectedSeats = [];
+        grid.textContent =
+            "Không thể tải sơ đồ ghế. Vui lòng thử lại.";
+        updateSelectedSeats();
+    }
+}
+
+window.loadSeatsFromAPI = loadSeatsFromAPI;
+
+// ========================================
+// NUT BO CHON TAT CA
+// ========================================
 
 function setupClearSeatsButton() {
     const clearBtn = document.getElementById("clearAllSeats");
 
-    if (!clearBtn || clearBtn.dataset.initialized) return;
-
-    clearBtn.dataset.initialized = "true";
+    if (!clearBtn) return;
 
     clearBtn.addEventListener("click", resetSelectedSeats);
 }
 
-// ==============================
-// KHỞI TẠO
-// ==============================
+// ========================================
+// KHOI TAO
+// ========================================
 
 function initSeatSelection() {
-    const container = document.getElementById("seatGrid");
+    const grid = document.getElementById("seatGrid");
 
-    if (!container) return;
+    if (!grid) return;
+
+    grid.textContent = "Vui lòng chọn suất chiếu trước.";
 
     setupClearSeatsButton();
-
-    // Tải ghế khi đã có suất chiếu
-    if (window.selectedShowtimeId) {
-        loadSeats();
-    }
+    updateSelectedSeats();
 }
 
-// ==============================
-// CHIA SẺ HÀM
-// ==============================
-
-window.loadSeats = loadSeats;
-window.updateSelectedSeats = updateSelectedSeats;
-window.resetSelectedSeats = resetSelectedSeats;
-window.renderSeatSelection = renderSeatSelection;
-
-// ==============================
-// KHỞI ĐỘNG
-// ==============================
-
-document.addEventListener("DOMContentLoaded", initSeatSelection);
+document.addEventListener(
+    "DOMContentLoaded",
+    initSeatSelection
+);
