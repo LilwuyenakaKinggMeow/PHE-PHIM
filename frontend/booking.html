@@ -36,8 +36,8 @@
                     </svg>
                     <select id="cinemaSelect" class="custom-select" aria-label="Chọn rạp chiếu">
                         <option value="ĐÀ NẴNG">ĐÀ NẴNG</option>
-                        <option value="NEW YORK">NEW YORK</option>
-                        <option value="PORTUGAL">PORTUGAL</option>
+                        <option value="NEW YORK">HÀ NỘI</option>
+                        <option value="PORTUGAL">TP.HỒ CHÍ MINH</option>
                     </select>
                 </div>
             </div>
@@ -53,22 +53,31 @@
             </a>
         </div>
 
-        <!-- MOVIE DETAIL -->
-        <section class="movie-detail-section">
-            <div class="movie-detail-content">
-                <div class="movie-detail-poster" id="movieDetailPoster"></div>
+        <!-- MOVIE HERO BANNER -->
+        <section class="movie-hero-section">
+            <div class="movie-backdrop-bg" id="movieBackdropBg"></div>
+            <div class="movie-backdrop-overlay"></div>
 
-                <div class="movie-detail-info">
-                    <span class="detail-eyebrow">PHÊ PHIM CINEMA</span>
-                    <h1 id="movieDetailTitle">Đang tải thông tin phim...</h1>
-
-                    <div class="movie-detail-meta">
-                        <span class="detail-age" id="movieDetailAge">T13</span>
-                        <span class="detail-rating" id="movieDetailRating">★ 9.0/10</span>
+            <div class="container movie-hero-content">
+                <div class="movie-detail-content">
+                    <div class="movie-detail-poster image-poster" id="movieDetailPosterContainer">
+                        <!-- Poster phim sẽ được chèn tự động bằng JS -->
                     </div>
 
-                    <p class="movie-detail-genre" id="movieDetailGenre"></p>
-                    <p class="movie-detail-description" id="movieDetailDescription"></p>
+                    <div class="movie-detail-info">
+                        <span class="detail-eyebrow">PHÊ PHIM CINEMA · ĐẶT VÉ TRỰC TUYẾN</span>
+                        <h1 id="movieDetailTitle">Đang tải thông tin phim...</h1>
+
+                        <div class="movie-detail-meta">
+                            <span class="detail-age" id="movieDetailAge">T13</span>
+                            <span class="detail-rating" id="movieDetailRating">★ 9.0/10</span>
+                        </div>
+
+                        <p class="movie-detail-genre" id="movieDetailGenre"></p>
+                        <p class="movie-detail-description" id="movieDetailDescription">
+                            Trải nghiệm không gian điện ảnh đỉnh cao cùng hệ thống âm thanh vòm Dolby Atmos và màn hình IMAX Laser sắc nét qua từng khung hình.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -81,7 +90,7 @@
                     Đặt Vé Xem Phim
                 </h2>
             </div>
-            <p class="section-subtitle">Chọn suất chiếu và vị trí ghế yêu thích của bạn.</p>
+            <p class="section-subtitle">Chọn ghế yêu thích và suất chiếu phù hợp với bạn.</p>
         </section>
 
         <!-- BOOKING WORKSPACE -->
@@ -155,6 +164,22 @@
                     </div>
                 </div>
 
+                <!-- SELECTED SEATS -->
+                <div class="selected-seats-area">
+                    <div class="selected-area-title">
+                        <span>Ghế đã chọn (<span id="selectedCountNum">0</span>/6)</span>
+                        <button type="button" id="clearAllSeats" class="clear-seats-btn hidden">
+                            Xóa tất cả
+                        </button>
+                    </div>
+
+                    <div id="selectedSeatsContainer">
+                        <div class="empty-seats-placeholder">
+                            Vui lòng chọn ghế yêu thích bên dưới.
+                        </div>
+                    </div>
+                </div>
+
                 <!-- SHOWTIMES -->
                 <div class="showtime-picker">
                     <div class="selected-area-title">
@@ -173,22 +198,6 @@
                         Thời gian giữ ghế:
                     </div>
                     <div class="timer-countdown" id="timerCountdown">05:00</div>
-                </div>
-
-                <!-- SELECTED SEATS -->
-                <div class="selected-seats-area">
-                    <div class="selected-area-title">
-                        <span>Ghế đã chọn (<span id="selectedCountNum">0</span>/6)</span>
-                        <button type="button" id="clearAllSeats" class="clear-seats-btn hidden">
-                            Xóa tất cả
-                        </button>
-                    </div>
-
-                    <div id="selectedSeatsContainer">
-                        <div class="empty-seats-placeholder">
-                            Vui lòng chọn suất chiếu trước, sau đó chọn ghế.
-                        </div>
-                    </div>
                 </div>
 
                 <!-- TOTAL -->

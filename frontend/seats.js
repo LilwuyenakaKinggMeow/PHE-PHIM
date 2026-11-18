@@ -1,4 +1,3 @@
-
 "use strict";
 
 // Cấu hình sơ đồ ghế
@@ -159,7 +158,7 @@ function updateSelectedSeats() {
         } else {
             container.innerHTML = `
                 <div class="empty-seats-placeholder">
-                    Vui lòng chọn suất chiếu trước, sau đó chọn ghế.
+                    Vui lòng chọn ghế yêu thích bên dưới.
                 </div>
             `;
         }
@@ -175,11 +174,15 @@ function updateSelectedSeats() {
         clearBtn.classList.toggle("hidden", selected.length === 0);
     }
 
-    // Khóa hoặc mở nút thanh toán
+    // Thanh toán bật khi: Đã chọn ít nhất 1 ghế VÀ Đã chọn suất chiếu
     if (checkoutBtn) {
-        checkoutBtn.disabled = selected.length === 0;
+        checkoutBtn.disabled =
+            selected.length === 0 || !window.selectedShowtime;
     }
 }
+
+// Cho phép script.js gọi hàm này
+window.updateSelectedSeats = updateSelectedSeats;
 
 // Xóa toàn bộ ghế đang chọn
 function resetSelectedSeats() {

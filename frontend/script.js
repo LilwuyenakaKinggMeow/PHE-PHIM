@@ -1,4 +1,3 @@
-
 "use strict";
 
 const SHOWTIMES = [
@@ -322,16 +321,28 @@ function initBookingPage() {
 
     window.selectedShowtime = null;
 
-    // Hiển thị poster phim
-    const poster = $("movieDetailPoster");
+    // 1. Gán ảnh nền mờ nghệ thuật cho Backdrop Banner
+    const backdropBg = document.getElementById("movieBackdropBg");
+    if (backdropBg) {
+        backdropBg.style.backgroundImage = `url("${selectedMovie.poster}")`;
+    }
 
-    if (poster) {
-        poster.src = selectedMovie.poster;
-
-        poster.onerror = () => {
-            poster.onerror = null;
-            poster.src = selectedMovie.fallback;
+    // 2. Hiển thị poster chính trực quan bằng thẻ <img> tại Banner
+    const posterContainer = document.getElementById("movieDetailPosterContainer");
+    if (posterContainer) {
+        posterContainer.replaceChildren();
+        
+        const img = document.createElement("img");
+        img.src = selectedMovie.poster;
+        img.alt = `Poster phim ${selectedMovie.title}`;
+        img.loading = "lazy";
+        
+        img.onerror = () => {
+            img.onerror = null;
+            img.src = selectedMovie.fallback;
         };
+        
+        posterContainer.append(img);
     }
 
     // Hiển thị thông tin phim
@@ -352,7 +363,7 @@ function initBookingPage() {
         $("movieDetailGenre").textContent = selectedMovie.genre;
     }
 
-    // Cập nhật thông tin tóm tắt đặt vé
+    // Cập nhật thông tin tóm tắt đặt vé ở sidebar bên phải
     if ($("summaryTitle")) {
         $("summaryTitle").textContent = selectedMovie.title;
     }
@@ -409,9 +420,9 @@ function renderShowtimes() {
 
             button.classList.add("active");
 
-            // Xóa ghế đã chọn khi đổi suất chiếu
-            if (typeof window.resetSelectedSeats === "function") {
-                window.resetSelectedSeats();
+            // Cập nhật lại trạng thái thanh toán mà KHÔNG xóa ghế đã chọn
+            if (typeof window.updateSelectedSeats === "function") {
+                window.updateSelectedSeats();
             }
         });
 
@@ -428,7 +439,8 @@ function init() {
         initHomePage();
     }
 
-    if ($("movieDetailTitle")) {
+    // Kiểm tra trang đặt vé thông qua element của banner mới
+    if (document.getElementById("movieBackdropBg") || $("movieDetailTitle")) {
         initBookingPage();
     }
 }
