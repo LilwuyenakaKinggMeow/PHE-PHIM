@@ -22,7 +22,7 @@ function getTotalAmount() {
         )
         .reduce((total, seat) => total + seat.price, 0);
 }
-
+window.loadSeats();
 
 // ========================================
 // CẬP NHẬT NÚT THANH TOÁN

@@ -1,159 +1,65 @@
-
 "use strict";
 
 // ==============================
-// DANH SÁCH SUẤT CHIẾU
+// CẤU HÌNH API
 // ==============================
 
-const SHOWTIMES = [
-    "09:00",
-    "11:30",
-    "14:00",
-    "17:00",
-    "20:30"
-];
+const API_URL = "http://localhost:3000/api/movies";
+const CINEMA_API_URL = "http://localhost:3000/api/cinemas";
+const SHOWTIME_API_URL = "http://localhost:3000/api/showtimes";
+
+const today = new Date().toISOString().split("T")[0];
 
 // ==============================
-// DỮ LIỆU PHIM
+// POSTER DỰ PHÒNG
 // ==============================
 
-const MOVIES_DATA = [
-    {
-        id: "the-odyssey",
-        title: "The Odyssey",
-        poster: "https://image.tmdb.org/t/p/original/7876PK6gosE13Uq1B6nRxf7AJLT.jpg",
-        fallback: "https://image.tmdb.org/t/p/original/7876PK6gosE13Uq1B6nRxf7AJLT.jpg",
-        age: "R",
-        genre: "Phiêu lưu · Hành động · Giả tưởng",
-        rating: 9.0
-    },
-    {
-        id: "doctor-x",
-        title: "Bác Sĩ X",
-        poster: "https://image.tmdb.org/t/p/original/jzqPdwpiDTPzvnbV0pZzTtOIgWz.jpg",
-        fallback: "https://image.tmdb.org/t/p/original/jzqPdwpiDTPzvnbV0pZzTtOIgWz.jpg",
-        age: "T18",
-        genre: "Bí ẩn · Chính kịch · Hình sự · Tâm lý",
-        rating: 9.0
-    },
-    {
-        id: "heart-of-the-beast",
-        title: "Trái Tim Quái Thú",
-        poster: "https://image.tmdb.org/t/p/original/2nVdUaSsD4cV2GwwZpuXbiHIXM.jpg",
-        fallback: "https://image.tmdb.org/t/p/original/2nVdUaSsD4cV2GwwZpuXbiHIXM.jpg",
-        age: "T13",
-        genre: "Hành động · Phiêu lưu",
-        rating: 8.8
-    },
-    {
-        id: "interstellar",
-        title: "Hố Đen Tử Thần",
-        poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-        fallback: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=500&q=85",
-        age: "T13",
-        genre: "Khoa học viễn tưởng · 169 phút",
-        rating: 9.0
-    },
-    {
-        id: "spiderverse",
-        title: "Người Nhện: Du Hành Vũ Trụ Nhện",
-        poster: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
-        fallback: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85",
-        age: "T13",
-        genre: "Hoạt hình · Hành động · 140 phút",
-        rating: 9.0
-    },
-    {
-        id: "toy-story-4",
-        title: "Câu Chuyện Đồ Chơi 4",
-        poster: "https://image.tmdb.org/t/p/w500/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg",
-        fallback: "https://images.unsplash.com/photo-1535223289827-42f1e9919769?w=500&q=85",
-        age: "P",
-        genre: "Hoạt hình · Gia đình · 100 phút",
-        rating: 8.2
-    },
-    {
-        id: "inception",
-        title: "Kẻ Đánh Cắp Giấc Mơ",
-        poster: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-        fallback: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&q=85",
-        age: "T13",
-        genre: "Hành động · Khoa học viễn tưởng · 148 phút",
-        rating: 8.8
-    },
-    {
-        id: "batman",
-        title: "Người Dơi",
-        poster: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        fallback: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=500&q=85",
-        age: "T16",
-        genre: "Hành động · Trinh thám · 176 phút",
-        rating: 8.5
-    },
-    {
-        id: "avatar-2",
-        title: "Avatar: Dòng Chảy Của Nước",
-        poster: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
-        fallback: "https://images.unsplash.com/photo-1470252649378-9c29740a8fa8?w=500&q=85",
-        age: "T13",
-        genre: "Khoa học viễn tưởng · 192 phút",
-        rating: 8.7
-    },
-    {
-        id: "your-name",
-        title: "Tên Cậu Là Gì?",
-        poster: "https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg",
-        fallback: "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=500&q=85",
-        age: "T13",
-        genre: "Hoạt hình · Tình cảm · 106 phút",
-        rating: 8.9
-    },
-    {
-        id: "coco",
-        title: "Coco: Hội Ngộ Diệu Kỳ",
-        poster: "https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg",
-        fallback: "https://images.unsplash.com/photo-1500530850857-b586d89ba3ee?w=500&q=85",
-        age: "P",
-        genre: "Hoạt hình · Gia đình · 105 phút",
-        rating: 8.8
-    },
-    {
-        id: "dune-2",
-        title: "Hành Tinh Cát: Phần Hai",
-        poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-        fallback: "https://images.unsplash.com/photo-1440404653325-ab127d49abcd?w=500&q=85",
-        age: "T16",
-        genre: "Khoa học viễn tưởng · 166 phút",
-        rating: 9.1
-    },
-    {
-        id: "grand-budapest",
-        title: "Khách Sạn Đế Vương",
-        poster: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg",
-        fallback: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=500&q=85",
-        age: "T13",
-        genre: "Hài · Phiêu lưu · 99 phút",
-        rating: 8.5
-    },
-    {
-        id: "oppenheimer",
-        title: "Oppenheimer: Cha Đẻ Bom Nguyên Tử",
-        poster: "https://image.tmdb.org/t/p/w500/ptpr0kGAckfQkJeJIt8st5dglvd.jpg",
-        fallback: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=500&q=85",
-        age: "T18",
-        genre: "Tâm lý · Lịch sử · 180 phút",
-        rating: 9.3
-    },
-    {
-        id: "spiderman-no-way-home",
-        title: "Người Nhện: Không Còn Nhà (Spider-Man: No Way Home)",
-        poster: "https://image.tmdb.org/t/p/original/7XzmrGu23xFPPWdaF29357Y420a.jpg",
-        fallback: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85",
-        age: "T13",
-        genre: "Hành động · Phiêu lưu · Khoa học viễn tưởng · 148 phút",
-        rating: 8.2
-    }
-];
+const FALLBACK_POSTERS = {
+    "the-odyssey":
+        "https://image.tmdb.org/t/p/original/7876PK6gosE13Uq1B6nRxf7AJLT.jpg",
+
+    "doctor-x":
+        "https://image.tmdb.org/t/p/original/jzqPdwpiDTPzvnbV0pZzTtOIgWz.jpg",
+
+    "heart-of-the-beast":
+        "https://image.tmdb.org/t/p/original/2nVdUaSsD4cV2GwwZpuXbiHIXM.jpg",
+
+    "interstellar":
+        "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=500&q=85",
+
+    "spiderverse":
+        "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85",
+
+    "toy-story-4":
+        "https://images.unsplash.com/photo-1535223289827-42f1e9919769?w=500&q=85",
+
+    "inception":
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&q=85",
+
+    "batman":
+        "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=500&q=85",
+
+    "avatar-2":
+        "https://images.unsplash.com/photo-1470252649378-9c29740a8fa8?w=500&q=85",
+
+    "your-name":
+        "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=500&q=85",
+
+    "coco":
+        "https://images.unsplash.com/photo-1500530850857-b586d89ba3ee?w=500&q=85",
+
+    "dune-2":
+        "https://images.unsplash.com/photo-1440404653325-ab127d49abcd?w=500&q=85",
+
+    "grand-budapest":
+        "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=500&q=85",
+
+    "oppenheimer":
+        "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=500&q=85",
+
+    "spiderman-no-way-home":
+        "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85"
+};
 
 // ==============================
 // BIẾN TOÀN CỤC
@@ -161,10 +67,287 @@ const MOVIES_DATA = [
 
 const $ = (id) => document.getElementById(id);
 
+let MOVIES_DATA = [];
+let CINEMAS_DATA = [];
+let SHOWTIMES_DATA = [];
+
 let selectedMovie = null;
+
+window.MOVIES_DATA = MOVIES_DATA;
+window.CINEMAS_DATA = CINEMAS_DATA;
+window.SHOWTIMES_DATA = SHOWTIMES_DATA;
 
 window.selectedMovie = null;
 window.selectedShowtime = null;
+window.selectedShowtimeId = null;
+
+// ==============================
+// LẤY DỮ LIỆU PHIM TỪ API
+// ==============================
+
+async function loadMovies() {
+    try {
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.data)) {
+            throw new Error("Dữ liệu phim từ API không hợp lệ.");
+        }
+
+        MOVIES_DATA = result.data.map(movie => {
+            const movieCode = movie.id_code;
+
+            return {
+                id: movieCode,
+                databaseId: movie.id,
+                title: movie.title,
+                poster: movie.poster,
+                fallback: FALLBACK_POSTERS[movieCode] || movie.poster,
+                age: movie.age,
+                genre: movie.genre || "Chưa cập nhật",
+                rating: Number(movie.rating) || 0,
+                duration: movie.duration
+            };
+        });
+
+        window.MOVIES_DATA = MOVIES_DATA;
+
+        console.log(
+            `Đã tải ${MOVIES_DATA.length} phim từ PostgreSQL API.`
+        );
+
+        return true;
+
+    } catch (error) {
+        console.error("Không thể tải danh sách phim:", error);
+
+        MOVIES_DATA = [];
+        window.MOVIES_DATA = MOVIES_DATA;
+
+        return false;
+    }
+}
+
+// ==============================
+// LẤY DANH SÁCH RẠP TỪ API
+// ==============================
+
+async function loadCinemas() {
+    try {
+        const response = await fetch(CINEMA_API_URL);
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.data)) {
+            throw new Error("Dữ liệu rạp từ API không hợp lệ.");
+        }
+
+        CINEMAS_DATA = result.data;
+        window.CINEMAS_DATA = CINEMAS_DATA;
+
+        const cinemaSelect = $("cinemaSelect");
+
+        if (!cinemaSelect) {
+            return true;
+        }
+
+        cinemaSelect.replaceChildren();
+
+        if (CINEMAS_DATA.length === 0) {
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Chưa có rạp chiếu";
+
+            cinemaSelect.append(option);
+            return true;
+        }
+
+        CINEMAS_DATA.forEach(cinema => {
+            const option = document.createElement("option");
+
+            option.value = cinema.id;
+            option.textContent = cinema.name;
+
+            cinemaSelect.append(option);
+        });
+
+        // Mặc định chọn rạp đầu tiên
+        cinemaSelect.value = String(CINEMAS_DATA[0].id);
+
+        console.log(
+            `Đã tải ${CINEMAS_DATA.length} rạp từ PostgreSQL API.`
+        );
+
+        return true;
+
+    } catch (error) {
+        console.error("Không thể tải danh sách rạp:", error);
+
+        const cinemaSelect = $("cinemaSelect");
+
+        if (cinemaSelect) {
+            cinemaSelect.replaceChildren();
+
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Không thể tải danh sách rạp";
+
+            cinemaSelect.append(option);
+        }
+
+        return false;
+    }
+}
+
+// ==============================
+// LẤY SUẤT CHIẾU TỪ API
+// ==============================
+
+async function loadShowtimes() {
+    const container = $("showtimeOptions");
+
+    if (!selectedMovie || !container) {
+        return;
+    }
+
+    const cinemaSelect = $("cinemaSelect");
+    const cinemaId = cinemaSelect ? cinemaSelect.value : "";
+
+    if (!cinemaId) {
+        renderShowtimeMessage("Vui lòng chọn rạp chiếu.");
+        return;
+    }
+
+    renderShowtimeMessage("Đang tải suất chiếu...");
+
+    try {
+        const dateInput = $("showDate");
+        const selectedDate = dateInput ? dateInput.value : today;
+
+        const params = new URLSearchParams({
+            movie: selectedMovie.id,
+            cinema: cinemaId,
+            date: selectedDate
+        });
+
+        const response = await fetch(
+            `${SHOWTIME_API_URL}?${params.toString()}`
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.data)) {
+            throw new Error("Dữ liệu suất chiếu không hợp lệ.");
+        }
+
+        SHOWTIMES_DATA = result.data;
+        window.SHOWTIMES_DATA = SHOWTIMES_DATA;
+
+        renderShowtimes();
+
+        console.log(
+            `Đã tải ${SHOWTIMES_DATA.length} suất chiếu.`
+        );
+
+    } catch (error) {
+        console.error("Không thể tải suất chiếu:", error);
+
+        SHOWTIMES_DATA = [];
+        window.SHOWTIMES_DATA = SHOWTIMES_DATA;
+
+        renderShowtimeMessage(
+            "Không thể tải suất chiếu. Vui lòng thử lại."
+        );
+    }
+}
+
+// ==============================
+// HIỂN THỊ THÔNG BÁO SUẤT CHIẾU
+// ==============================
+
+function renderShowtimeMessage(message) {
+    const container = $("showtimeOptions");
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    const text = document.createElement("p");
+    text.className = "empty-showtimes";
+    text.textContent = message;
+
+    container.append(text);
+}
+
+// ==============================
+// KHỞI TẠO NGÀY CHIẾU
+// ==============================
+
+function setupDatePicker() {
+    const dateInput = $("showDate");
+
+    if (!dateInput) return;
+
+    dateInput.min = today;
+    dateInput.value = today;
+
+    dateInput.addEventListener("change", async () => {
+        window.selectedShowtime = null;
+        window.selectedShowtimeId = null;
+
+        // Xóa ghế đã chọn của suất chiếu cũ
+        if (typeof window.resetSelectedSeats === "function") {
+            window.resetSelectedSeats();
+        }
+
+        await loadShowtimes();
+
+        if (typeof window.updateCheckoutButton === "function") {
+            window.updateCheckoutButton();
+        }
+    });
+}
+
+// ==============================
+// XỬ LÝ KHI ĐỔI RẠP
+// ==============================
+
+function setupCinemaEvents() {
+    const cinemaSelect = $("cinemaSelect");
+
+    if (!cinemaSelect) return;
+
+    cinemaSelect.addEventListener("change", async () => {
+        // Đổi rạp thì cần chọn lại suất chiếu
+        window.selectedShowtime = null;
+        window.selectedShowtimeId = null;
+
+        // Xóa lựa chọn ghế cũ khi đổi rạp
+        if (typeof window.resetSelectedSeats === "function") {
+            window.resetSelectedSeats();
+        }
+
+        // Tải lại suất chiếu
+        await loadShowtimes();
+
+        if (typeof window.updateCheckoutButton === "function") {
+            window.updateCheckoutButton();
+        }
+    });
+}
 
 // ==============================
 // XỬ LÝ TÌM KIẾM
@@ -229,7 +412,9 @@ function renderMoviesList(keyword = "") {
         const empty = document.createElement("p");
 
         empty.className = "empty-movies";
-        empty.textContent = "Không tìm thấy phim phù hợp.";
+        empty.textContent = MOVIES_DATA.length === 0
+            ? "Không thể tải danh sách phim. Vui lòng thử tải lại trang."
+            : "Không tìm thấy phim phù hợp.";
 
         row.append(empty);
         return;
@@ -263,7 +448,7 @@ function renderMoviesList(keyword = "") {
 
         const age = document.createElement("span");
         age.className = "poster-age";
-        age.textContent = movie.age;
+        age.textContent = movie.age || "Chưa phân loại";
 
         poster.append(age);
 
@@ -312,8 +497,11 @@ function setupEvents() {
 // KHỞI TẠO TRANG CHỦ
 // ==============================
 
-function initHomePage() {
+async function initHomePage() {
     setupEvents();
+
+    await loadCinemas();
+
     renderMoviesList();
 }
 
@@ -321,7 +509,7 @@ function initHomePage() {
 // KHỞI TẠO TRANG ĐẶT VÉ
 // ==============================
 
-function initBookingPage() {
+async function initBookingPage() {
     const params = new URLSearchParams(window.location.search);
     const movieId = params.get("movie");
 
@@ -334,11 +522,11 @@ function initBookingPage() {
         return;
     }
 
-    // Chia sẻ thông tin phim với booking.js
     window.selectedMovie = selectedMovie;
 
     // Reset suất chiếu khi vào trang
     window.selectedShowtime = null;
+    window.selectedShowtimeId = null;
 
     // ==============================
     // BACKDROP BANNER
@@ -395,6 +583,11 @@ function initBookingPage() {
         $("movieDetailGenre").textContent = selectedMovie.genre;
     }
 
+    if ($("movieDetailDescription")) {
+        $("movieDetailDescription").textContent =
+            selectedMovie.description || "";
+    }
+
     // ==============================
     // THÔNG TIN SIDEBAR
     // ==============================
@@ -422,16 +615,29 @@ function initBookingPage() {
     const durationMatch = selectedMovie.genre.match(/(\d+)\s*phút/i);
 
     if ($("summaryDuration")) {
-        $("summaryDuration").textContent = durationMatch
-            ? durationMatch[1] + " phút"
-            : "Chưa cập nhật";
+        $("summaryDuration").textContent = selectedMovie.duration
+            ? `${selectedMovie.duration} phút`
+            : durationMatch
+                ? `${durationMatch[1]} phút`
+                : "Chưa cập nhật";
     }
 
     // ==============================
-    // SUẤT CHIẾU
+    // TẢI RẠP VÀ SUẤT CHIẾU
     // ==============================
 
-    renderShowtimes();
+    setupDatePicker();
+    setupCinemaEvents();
+
+    const cinemasLoaded = await loadCinemas();
+
+    if (cinemasLoaded && CINEMAS_DATA.length > 0) {
+        await loadShowtimes();
+    } else {
+        renderShowtimeMessage(
+            "Không thể tải danh sách rạp chiếu."
+        );
+    }
 
     // Cập nhật trạng thái nút thanh toán
     if (typeof window.updateCheckoutButton === "function") {
@@ -450,28 +656,48 @@ function renderShowtimes() {
 
     container.replaceChildren();
 
-    SHOWTIMES.forEach(time => {
+    if (SHOWTIMES_DATA.length === 0) {
+        renderShowtimeMessage(
+            "Hiện chưa có suất chiếu cho phim và rạp này."
+        );
+        return;
+    }
+
+    SHOWTIMES_DATA.forEach(showtime => {
+        const time = String(showtime.start_time).slice(0, 5);
+
         const button = document.createElement("button");
 
         button.type = "button";
         button.className = "showtime-option";
         button.textContent = time;
 
-        button.addEventListener("click", () => {
-            // Lưu suất chiếu đã chọn
+        button.addEventListener("click", async () => {
+            // Lưu thông tin suất chiếu
             window.selectedShowtime = time;
+            window.selectedShowtimeId = showtime.id;
 
-            // Cập nhật trạng thái nút
+            // Bỏ trạng thái active ở các suất khác
             container.querySelectorAll("button").forEach(item => {
                 item.classList.remove("active");
             });
 
             button.classList.add("active");
 
-            // Cập nhật điều kiện thanh toán
+            // Tải sơ đồ ghế theo suất chiếu vừa chọn
+            if (typeof window.loadSeats === "function") {
+                await window.loadSeats();
+            }
+
+            // Cập nhật nút thanh toán
             if (typeof window.updateCheckoutButton === "function") {
                 window.updateCheckoutButton();
             }
+
+            console.log("Suất chiếu đã chọn:", {
+                id: window.selectedShowtimeId,
+                time: window.selectedShowtime
+            });
         });
 
         container.append(button);
@@ -482,7 +708,20 @@ function renderShowtimes() {
 // KHỞI ĐỘNG ỨNG DỤNG
 // ==============================
 
-function init() {
+async function init() {
+    const loaded = await loadMovies();
+
+    if (!loaded) {
+        if ($("movieCardsRow")) {
+            renderMoviesList();
+        } else if ($("movieBackdropBg") || $("movieDetailTitle")) {
+            alert("Không thể kết nối máy chủ. Vui lòng thử lại sau.");
+            window.location.href = "index.html";
+        }
+
+        return;
+    }
+
     // Trang chủ
     if ($("movieCardsRow")) {
         initHomePage();
@@ -490,7 +729,7 @@ function init() {
 
     // Trang đặt vé
     if ($("movieBackdropBg") || $("movieDetailTitle")) {
-        initBookingPage();
+        await initBookingPage();
     }
 }
 
