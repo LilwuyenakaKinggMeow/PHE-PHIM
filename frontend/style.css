@@ -1701,3 +1701,224 @@ button {
     white-space: nowrap;
     flex-shrink: 0;
 }
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.footer-brand {
+    color: var(--accent-amber);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.footer-content p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Responsive cho điện thoại */
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
+/* ==========================================
+   TINH CHỈNH GIAO DIỆN ĐẶT VÉ (BOOKING UI)
+========================================== */
+
+/* 1. Nút quay lại danh sách phim (Màu sắc và độ tương phản) */
+.booking-navigation {
+    margin: 20px 0 16px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-glass);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-smooth);
+}
+
+.back-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-glass-strong);
+    transform: translateX(-3px);
+}
+
+/* 2. Phần tiêu đề thông tin phim phía trên sơ đồ ghế */
+.movie-detail-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+/* 3. Tối ưu phần hiển thị suất chiếu trong thẻ Summary (Sidebar bên phải) */
+.showtime-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.showtime-btn {
+    padding: 8px 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.showtime-btn:hover {
+    border-color: var(--accent-amber);
+    color: #fff;
+}
+
+.showtime-btn.active {
+    background: linear-gradient(135deg, var(--accent-ruby), #be123c);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 14px var(--accent-ruby-glow);
+}
+
+/* 4. Tinh chỉnh nút "Xóa tất cả" ghế đã chọn */
+.clear-seats-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-ruby);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.clear-seats-btn:hover {
+    color: var(--accent-ruby-hover);
+    text-decoration: underline;
+}
+
+/* 5. Căn chỉnh khoảng cách khung sơ đồ ghế */
+.seat-stage {
+    box-shadow: var(--shadow-card);
+}
+/* ==========================================
+   TINH CHỈNH HOÀN THIỆN GIAO DIỆN (FIX FRAME & UI)
+========================================== */
+
+/* 1. Nút quay lại danh sách phim */
+.booking-navigation {
+    margin: 20px 0 16px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-glass);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-smooth);
+}
+
+.back-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-glass-strong);
+    transform: translateX(-3px);
+}
+
+/* 2. Cố định chiều rộng cột suất chiếu trong bảng Summary để không bị vỡ khung */
+.showtime-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.showtime-option, 
+.showtime-btn {
+    padding: 8px 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.showtime-option:hover, 
+.showtime-btn:hover {
+    border-color: var(--accent-amber);
+    color: #fff;
+}
+
+.showtime-option.active, 
+.showtime-btn.active {
+    background: linear-gradient(135deg, var(--accent-ruby), #be123c);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 14px var(--accent-ruby-glow);
+}
+
+/* 3. Tối ưu nút "Xóa tất cả" ghế */
+.clear-seats-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-ruby);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.clear-seats-btn:hover {
+    color: var(--accent-ruby-hover);
+    text-decoration: underline;
+}
+
+/* 4. Tinh chỉnh khung chi tiết phim bên trái sơ đồ ghế */
+.movie-detail-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+/* 5. Đảm bảo hiển thị ảnh poster chuẩn xác */
+.movie-detail-poster img,
+.movie-detail-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+}
