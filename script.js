@@ -3,16 +3,45 @@ const FEATURED_MOVIES_COUNT = 3;
 let showAllMovies = false;
 const MOVIES_DATA = [
     {
-        id: "spiderverse",
-        title: "Người Nhện: Du Hành Vũ Trụ Nhện",
-        genre: "Hoạt hình · Hành động · 140 phút",
-        age: "T13",
-        rating: "9.0",
-        poster: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
-        fallback: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85",
+        id: "the-odyssey",
+        title: "The Odyssey",
+        poster: "https://image.tmdb.org/t/p/original/7876PK6gosE13Uq1B6nRxf7AJLT.jpg",
+        fallback: "https://image.tmdb.org/t/p/original/7876PK6gosE13Uq1B6nRxf7AJLT.jpg",
+        age: "R",
+        genre: "Phiêu lưu · Hành động · Giả tưởng",
+        rating: 9.0,
         showtimes: [
-            { id: "st-6", time: "17:45", room: "Phòng 02 · 2D" },
-            { id: "st-7", time: "20:30", room: "Phòng 05 · 2D" }
+            { id: "odyssey-1", time: "09:00" },
+            { id: "odyssey-2", time: "13:30" },
+            { id: "odyssey-3", time: "18:00" }
+        ]
+    },
+    {
+        id: "doctor-x",
+        title: "Bác Sĩ X",
+        poster: "https://image.tmdb.org/t/p/original/jzqPdwpiDTPzvnbV0pZzTtOIgWz.jpg",
+        fallback: "https://image.tmdb.org/t/p/original/jzqPdwpiDTPzvnbV0pZzTtOIgWz.jpg",
+        age: "T18",
+        genre: "Bí ẩn · Chính kịch · Hình sự · Tâm lý",
+        rating: 9.0,
+        showtimes: [
+            { id: "doctor-x-1", time: "09:00" },
+            { id: "doctor-x-2", time: "13:30" },
+            { id: "doctor-x-3", time: "18:00" }
+        ]
+    },
+    {
+        id: "heart-of-the-beast",
+        title: "Trái Tim Quái Thú",
+        poster: "https://image.tmdb.org/t/p/original/2nVdUaSsD4cV2GwwZpuXbiHIXM.jpg",
+        fallback: "https://image.tmdb.org/t/p/original/2nVdUaSsD4cV2GwwZpuXbiHIXM.jpg",
+        age: "T13",
+        genre: "Hành động · Phiêu lưu",
+        rating: 8.8,
+        showtimes: [
+            { id: "beast-1", time: "09:00" },
+            { id: "beast-2", time: "13:30" },
+            { id: "beast-3", time: "18:00" }
         ]
     },
     {
@@ -27,6 +56,19 @@ const MOVIES_DATA = [
             { id: "st-8", time: "09:00", room: "Phòng 01 · 2D" },
             { id: "st-9", time: "14:30", room: "Phòng 03 · IMAX" },
             { id: "st-10", time: "20:00", room: "Phòng 02 · 2D" }
+        ]
+    },
+    {
+        id: "spiderverse",
+        title: "Người Nhện: Du Hành Vũ Trụ Nhện",
+        genre: "Hoạt hình · Hành động · 140 phút",
+        age: "T13",
+        rating: "9.0",
+        poster: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+        fallback: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85",
+        showtimes: [
+            { id: "st-6", time: "17:45", room: "Phòng 02 · 2D" },
+            { id: "st-7", time: "20:30", room: "Phòng 05 · 2D" }
         ]
     },
     {
@@ -201,7 +243,7 @@ const appState = {
 };
 
 const $ = (id) => document.getElementById(id);
-// Chuẩn hóa văn bản: bỏ dấu tiếng Việt và chuyển về chữ thường
+
 function normalizeText(text) {
     return String(text)
         .normalize("NFD")
