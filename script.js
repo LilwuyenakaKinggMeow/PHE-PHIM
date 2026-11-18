@@ -11,9 +11,9 @@ const MOVIES_DATA = [
         genre: "Phiêu lưu · Hành động · Giả tưởng",
         rating: 9.0,
         showtimes: [
-            { id: "odyssey-1", time: "09:00" },
-            { id: "odyssey-2", time: "13:30" },
-            { id: "odyssey-3", time: "18:00" }
+            { id: "odyssey-1", time: "09:00", room: "Phòng 01 · 2D" },
+            { id: "odyssey-2", time: "13:30", room: "Phòng 03 · IMAX" },
+            { id: "odyssey-3", time: "18:00", room: "Phòng 02 · 2D" }
         ]
     },
     {
@@ -25,9 +25,9 @@ const MOVIES_DATA = [
         genre: "Bí ẩn · Chính kịch · Hình sự · Tâm lý",
         rating: 9.0,
         showtimes: [
-            { id: "doctor-x-1", time: "09:00" },
-            { id: "doctor-x-2", time: "13:30" },
-            { id: "doctor-x-3", time: "18:00" }
+            { id: "doctor-x-1", time: "09:00", room: "Phòng 01 · 2D" },
+            { id: "doctor-x-2", time: "13:30", room: "Phòng 02 · 2D" },
+            { id: "doctor-x-3", time: "18:00", room: "Phòng 03 · IMAX" }
         ]
     },
     {
@@ -39,9 +39,9 @@ const MOVIES_DATA = [
         genre: "Hành động · Phiêu lưu",
         rating: 8.8,
         showtimes: [
-            { id: "beast-1", time: "09:00" },
-            { id: "beast-2", time: "13:30" },
-            { id: "beast-3", time: "18:00" }
+            { id: "beast-1", time: "09:00", room: "Phòng 02 · 2D" },
+            { id: "beast-2", time: "13:30", room: "Phòng 01 · 2D" },
+            { id: "beast-3", time: "18:00", room: "Phòng 03 · IMAX" }
         ]
     },
     {
