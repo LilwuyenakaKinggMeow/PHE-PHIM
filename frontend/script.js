@@ -658,7 +658,7 @@ function renderShowtimes() {
 
     if (SHOWTIMES_DATA.length === 0) {
         renderShowtimeMessage(
-            "Hiện chưa có suất chiếu cho phim và rạp này."
+            "Không có"
         );
         return;
     }
@@ -734,3 +734,204 @@ async function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+// ==========================================
+// TRA CỨU VÉ
+// ==========================================
+
+function initTicketLookup() {
+    const modal = document.getElementById("ticketLookupModal");
+    const openBtn = document.getElementById("openTicketLookup");
+    const closeBtn = document.getElementById("closeTicketLookup");
+    const codeInput = document.getElementById("ticketBookingCode");
+    const searchBtn = document.getElementById("searchTicketBtn");
+    const message = document.getElementById("ticketLookupMessage");
+    const result = document.getElementById("ticketLookupResult");
+
+    if (!modal || !openBtn || !closeBtn || !codeInput || !searchBtn) {
+        return;
+    }
+
+    // Mở cửa sổ tra cứu
+    openBtn.addEventListener("click", () => {
+        modal.classList.add("active");
+        codeInput.focus();
+    });
+
+    // Đóng cửa sổ
+    closeBtn.addEventListener("click", () => {
+        modal.classList.remove("active");
+    });
+
+    // Đóng khi nhấn bên ngoài
+    modal.addEventListener("click", event => {
+        if (event.target === modal) {
+            modal.classList.remove("active");
+        }
+    });
+
+    // Đóng bằng phím Escape
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            modal.classList.remove("active");
+        }
+    });
+
+    // Tra cứu khi nhấn Enter
+    codeInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            searchTicket();
+        }
+    });
+
+    // Tra cứu khi nhấn nút
+    searchBtn.addEventListener("click", searchTicket);
+
+    async function searchTicket() {
+        const bookingCode = codeInput.value.trim().toUpperCase();
+
+        message.textContent = "";
+        message.className = "ticket-lookup-message";
+        result.replaceChildren();
+
+        if (!bookingCode) {
+            showMessage("Vui lòng nhập mã đặt vé.", "error");
+            codeInput.focus();
+            return;
+        }
+
+        // Kiểm tra định dạng mã vé
+        const codePattern = /^PPH-\d{13}-[A-F0-9]{8}$/;
+
+        if (!codePattern.test(bookingCode)) {
+            showMessage("Mã đặt vé không đúng định dạng.", "error");
+            return;
+        }
+
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Đang tìm...";
+
+        try {
+            const response = await fetch(
+                `http://localhost:3000/api/bookings/${encodeURIComponent(bookingCode)}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Không tìm thấy vé.");
+            }
+
+            renderTicket(data.data);
+            showMessage("Tra cứu vé thành công!", "success");
+
+        } catch (error) {
+            showMessage(error.message || "Không thể kết nối máy chủ.", "error");
+
+        } finally {
+            searchBtn.disabled = false;
+            searchBtn.textContent = "Tra cứu";
+        }
+    }
+
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = `ticket-lookup-message ${type}`;
+    }
+
+
+    function renderTicket(ticket) {
+        const formatMoney = amount =>
+            Number(amount).toLocaleString("vi-VN") + " VNĐ";
+
+        const statusText = {
+            confirmed: "Đã xác nhận",
+            pending: "Đang chờ xác nhận",
+            cancelled: "Đã hủy"
+        };
+
+        const seats = Array.isArray(ticket.seats) ? ticket.seats : [];
+
+        const card = document.createElement("div");
+        card.className = "ticket-result-card";
+
+        // Tiêu đề vé
+        const heading = document.createElement("h3");
+        heading.className = "ticket-result-heading";
+        heading.textContent = "VÉ ĐIỆN TỬ PHÊ PHIM";
+
+        const code = document.createElement("div");
+        code.className = "ticket-result-code";
+        code.textContent = ticket.bookingCode || "";
+
+        card.append(heading, code);
+
+        // Khu vực poster + thông tin
+        const content = document.createElement("div");
+        content.className = "ticket-result-content";
+
+        // Poster phim
+        const posterWrapper = document.createElement("div");
+        posterWrapper.className = "ticket-result-poster";
+
+        const poster = document.createElement("img");
+        poster.src = ticket.poster || "";
+        poster.alt = ticket.movieTitle || "Poster phim";
+        poster.loading = "lazy";
+
+        poster.onerror = () => {
+            posterWrapper.classList.add("poster-unavailable");
+            poster.remove();
+        };
+
+        if (ticket.poster) {
+            posterWrapper.append(poster);
+        } else {
+            posterWrapper.classList.add("poster-unavailable");
+        }
+
+        // Thông tin vé
+        const details = document.createElement("div");
+        details.className = "ticket-result-details";
+
+        const rows = [
+            ["Khách hàng", ticket.customerName],
+            ["Email", ticket.customerEmail],
+            ["Phim", ticket.movieTitle],
+            ["Rạp", ticket.cinemaName],
+            ["Ngày chiếu", ticket.showDate],
+            ["Giờ chiếu", ticket.startTime],
+            ["Ghế", seats.map(seat => seat.seatCode).join(", ")],
+            ["Tổng tiền", formatMoney(ticket.totalAmount)],
+            ["Trạng thái", statusText[ticket.status] || ticket.status]
+        ];
+
+        rows.forEach(([label, value]) => {
+            const row = document.createElement("div");
+            row.className = "ticket-result-row";
+
+            const labelElement = document.createElement("span");
+            labelElement.className = "ticket-result-label";
+            labelElement.textContent = label;
+
+            const valueElement = document.createElement("strong");
+            valueElement.className = "ticket-result-value";
+            valueElement.textContent = value ?? "—";
+
+            if (label === "Trạng thái") {
+                valueElement.classList.add("ticket-status-confirmed");
+            }
+
+            row.append(labelElement, valueElement);
+            details.append(row);
+        });
+
+        content.append(posterWrapper, details);
+        card.append(content);
+        result.append(card);
+    }
+
+}
+
+// Khởi tạo chức năng tra cứu vé
+document.addEventListener("DOMContentLoaded", initTicketLookup);

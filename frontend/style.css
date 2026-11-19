@@ -2153,3 +2153,365 @@ button {
     padding: 20px;
     color: #aaa;
 }
+
+.customer-info-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 15px 0 20px;
+}
+
+.customer-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+    background: #18181b;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.customer-input:focus {
+    border-color: #a50064;
+}
+
+.customer-input::placeholder {
+    color: #a1a1aa;
+}
+/* Ghế cơ bản */
+.seat-grid .seat {
+    position: relative;
+    min-width: 42px;
+    height: 38px;
+    padding: 0 6px 4px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* 1. Thường (standard) */
+.seat-grid .seat.standard {
+    background: rgba(39, 39, 42, 0.72);
+    border: 1px solid rgba(161, 161, 170, 0.25);
+    color: #e4e4e7;
+}
+
+/* 2. VIP (vip) */
+.seat-grid .seat.vip {
+    background: rgba(120, 53, 15, 0.22);
+    border: 1.5px solid #d97706;
+    color: #fbbf24;
+}
+
+/* 3. Đôi (sweetbox / sweet) */
+.seat-grid .seat.sweetbox,
+.seat-grid .seat.sweet {
+    min-width: 88px;
+    background: rgba(136, 19, 55, 0.35);
+    border: 1.5px solid #e11d48;
+    color: #fda4af;
+}
+
+/* Hover khi ghế còn trống */
+.seat-grid .seat:not(:disabled):hover {
+    transform: translateY(-2px);
+    filter: brightness(1.15);
+}
+
+/* 4. Đang chọn (selected) */
+.seat-grid .seat.selected,
+.seat-grid .seat.vip.selected,
+.seat-grid .seat.sweetbox.selected,
+.seat-grid .seat.sweet.selected {
+    background: #f43f5e;
+    border: 1.5px solid #fb7185;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.45);
+}
+
+/* 5. Khách khác đang giữ (held / locked) */
+.seat-grid .seat.held,
+.seat-grid .seat.locked,
+.seat-grid .seat.vip.held,
+.seat-grid .seat.sweetbox.held {
+    background: rgba(120, 53, 15, 0.14);
+    border: 1px dashed #eab308;
+    color: #facc15;
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+/* 6. Đã đặt (booked / sold) */
+.seat-grid .seat.booked,
+.seat-grid .seat.sold,
+.seat-grid .seat.vip.booked,
+.seat-grid .seat.sweetbox.booked {
+    background: rgba(24, 24, 27, 0.7);
+    border: 1px solid rgba(113, 113, 122, 0.25);
+    color: #71717a;
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+/* ==========================================
+   TRA CỨU VÉ - HEADER BUTTON
+========================================== */
+
+.lookup-ticket-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 11px 16px;
+    min-height: 42px;
+
+    border: 1px solid rgba(214, 173, 96, 0.35);
+    border-radius: 12px;
+
+    background: rgba(214, 173, 96, 0.08);
+    color: #d6ad60;
+
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    transition: all 0.25s ease;
+}
+
+.lookup-ticket-btn svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+}
+
+.lookup-ticket-btn:hover {
+    background: linear-gradient(135deg, #d6ad60, #b8893e);
+    border-color: transparent;
+    color: #111;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(214, 173, 96, 0.2);
+}
+
+.lookup-ticket-btn:focus-visible {
+    outline: 2px solid #d6ad60;
+    outline-offset: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .lookup-ticket-btn {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+/* ==========================================
+   TICKET LOOKUP MODAL
+========================================== */
+
+.ticket-lookup-card {
+    max-width: 560px;
+}
+
+.ticket-lookup-body {
+    padding-top: 18px;
+}
+
+.ticket-lookup-description {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.ticket-lookup-body label {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ticket-lookup-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.ticket-lookup-input-group input {
+    flex: 1;
+    min-width: 0;
+    padding: 13px 14px;
+    border-radius: 11px;
+    border: 1px solid var(--border-glass);
+    background: rgba(255, 255, 255, 0.05);
+    outline: none;
+    font-size: 0.85rem;
+}
+
+.ticket-lookup-input-group input:focus {
+    border-color: var(--accent-amber);
+}
+
+.ticket-lookup-input-group button {
+    padding: 0 20px;
+    border: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #d6ad60, #b8893e);
+    color: #111;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ticket-lookup-input-group button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(214, 173, 96, 0.2);
+}
+
+.ticket-lookup-message {
+    margin-top: 14px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.ticket-lookup-message.error {
+    color: #fb7185;
+}
+
+.ticket-lookup-message.success {
+    color: #4ade80;
+}
+
+.ticket-lookup-result {
+    margin-top: 18px;
+}
+
+.ticket-lookup-result:empty {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .ticket-lookup-input-group {
+        flex-direction: column;
+    }
+
+    .ticket-lookup-input-group button {
+        min-height: 44px;
+    }
+}
+
+/* ==========================================
+   VÉ ĐIỆN TỬ - POSTER + THÔNG TIN
+========================================== */
+
+.ticket-result-card {
+    padding: 20px;
+    border: 1px solid rgba(214, 173, 96, 0.25);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.ticket-result-heading {
+    margin: 0 0 8px;
+    color: var(--accent-amber);
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 1.5px;
+}
+
+.ticket-result-code {
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.ticket-result-content {
+    display: grid;
+    grid-template-columns: 125px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.ticket-result-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.ticket-result-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ticket-result-poster.poster-unavailable::after {
+    content: "Không có poster";
+    display: grid;
+    height: 100%;
+    min-height: 120px;
+    place-items: center;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.ticket-result-details {
+    min-width: 0;
+}
+
+.ticket-result-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ticket-result-label {
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+}
+
+.ticket-result-value {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+.ticket-status-confirmed {
+    color: #4ade80;
+}
+
+@media (max-width: 480px) {
+    .ticket-result-card {
+        padding: 14px;
+    }
+
+    .ticket-result-content {
+        grid-template-columns: 95px minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .ticket-result-row {
+        padding: 6px 0;
+    }
+
+    .ticket-result-value {
+        font-size: 0.78rem;
+    }
+}

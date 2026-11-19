@@ -7,7 +7,8 @@ const app = express();
 const movieRoutes = require("./routes/movieRoutes");
 const showtimeRoutes = require("./routes/showtimeRoutes");
 const cinemaRoutes = require("./routes/cinemaRoutes");
-const seatRoutes = require("./routes/seatRoutes"); // Đã thêm khai báo seatRoutes
+const seatRoutes = require("./routes/seatRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -30,7 +31,9 @@ app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/cinemas", cinemaRoutes);
 
 // Seat API
-app.use("/api/seats", seatRoutes); // Đã thêm đăng ký route cho seats
+app.use("/api/seats", seatRoutes);
+
+app.use("/api/bookings", bookingRoutes);
 
 const PORT = process.env.PORT || 3000;
 

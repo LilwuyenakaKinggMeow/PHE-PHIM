@@ -61,6 +61,16 @@
                     </select>
                 </div>
 
+                <!-- TRA CỨU VÉ -->
+                <button type="button" class="lookup-ticket-btn" id="openTicketLookup">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 4h16v16H4z" />
+                        <path d="M8 8h8M8 12h8M8 16h4" />
+                    </svg>
+                    <span>Tra cứu vé</span>
+                </button>
+
             </div>
         </div>
     </header>
@@ -85,7 +95,43 @@
 
     </main>
 
+    <!-- TRA CỨU VÉ MODAL -->
+    <div class="modal-backdrop" id="ticketLookupModal">
+        <div class="modal-card ticket-lookup-card">
 
+            <div class="modal-header">
+                <h3>Tra Cứu Vé</h3>
+
+                <button type="button" class="close-modal-btn" id="closeTicketLookup" aria-label="Đóng">
+                    ✕
+                </button>
+            </div>
+
+            <div class="ticket-lookup-body">
+
+                <p class="ticket-lookup-description">
+                    Nhập mã đặt vé để xem thông tin vé điện tử của bạn.
+                </p>
+
+                <label for="ticketBookingCode">Mã đặt vé</label>
+
+                <div class="ticket-lookup-input-group">
+                    <input type="text" id="ticketBookingCode" placeholder="Ví dụ: PPH-1795055031084-A04D1D80"
+                        autocomplete="off">
+
+                    <button type="button" id="searchTicketBtn">
+                        Tra cứu
+                    </button>
+                </div>
+
+                <div id="ticketLookupMessage" class="ticket-lookup-message"></div>
+
+                <div id="ticketLookupResult" class="ticket-lookup-result"></div>
+
+            </div>
+
+        </div>
+    </div>
     <!-- FOOTER -->
     <footer class="site-footer">
 
