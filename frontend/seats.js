@@ -8,7 +8,7 @@
 const SEAT_CONFIG = {
     standard: 85000,
     vip: 115000,
-    sweetbox: 240000
+    sweetbox: 120000
 };
 
 const MAX_SEATS = 6;
@@ -62,7 +62,7 @@ async function loadSeats() {
             throw new Error(result.message || "Không thể tải sơ đồ ghế.");
         }
 
-        seatState.seats = result.data.map(item => ({
+        const rawSeats = result.data.map(item => ({
             id: item.id,
             cinemaId: item.cinema_id,
             code: item.seat_code,
@@ -70,6 +70,21 @@ async function loadSeats() {
             price: SEAT_CONFIG[item.seat_type] || SEAT_CONFIG.standard,
             status: item.status
         }));
+
+        // Tìm hàng cuối cùng (hàng H) và chuyển thành ghế đôi (sweetbox)
+        const rows = [...new Set(rawSeats.map(s => s.code.charAt(0)))];
+        const lastRow = rows[rows.length - 1];
+
+        seatState.seats = rawSeats.map(seat => {
+            if (lastRow && seat.code.startsWith(lastRow)) {
+                return {
+                    ...seat,
+                    type: "sweetbox",
+                    price: SEAT_CONFIG.sweetbox
+                };
+            }
+            return seat;
+        });
 
         // Loại bỏ ghế đã không còn trong danh sách hoặc đã được đặt
         seatState.selectedSeats = seatState.selectedSeats.filter(code =>
@@ -148,10 +163,10 @@ function renderSeatSelection() {
     const rows = [...new Set(
         seatState.seats.map(seat => seat.code.charAt(0))
     )];
+    const lastRow = rows[rows.length - 1];
 
     rows.forEach(row => {
         const rowElement = document.createElement("div");
-
         rowElement.className = "seat-row";
         rowElement.dataset.row = row;
 
@@ -159,9 +174,56 @@ function renderSeatSelection() {
             seat.code.startsWith(row)
         );
 
-        rowSeats.forEach(seat => {
-            rowElement.appendChild(createSeatElement(seat));
-        });
+        // Nếu là hàng cuối -> gộp từng cặp 2 ghế thành 1 nút ghế đôi
+        if (row === lastRow && rowSeats.length >= 2) {
+            for (let i = 0; i < rowSeats.length; i += 2) {
+                const left = rowSeats[i];
+                const right = rowSeats[i + 1];
+
+                if (!right) {
+                    rowElement.appendChild(createSeatElement(left));
+                    continue;
+                }
+
+                const pairStatus =
+                    left.status === "booked" || right.status === "booked"
+                        ? "booked"
+                        : left.status === "held" || right.status === "held"
+                            ? "held"
+                            : "available";
+
+                const pairButton = createSeatElement({
+                    ...left,
+                    code: `${left.code}-${right.code}`,
+                    type: "sweetbox",
+                    status: pairStatus
+                });
+
+                // Đánh dấu selected nếu cả 2 ghế trong cặp đang được chọn
+                if (
+                    pairStatus === "available" &&
+                    seatState.selectedSeats.includes(left.code) &&
+                    seatState.selectedSeats.includes(right.code)
+                ) {
+                    pairButton.classList.add("selected");
+                    pairButton.setAttribute("aria-pressed", "true");
+                }
+
+                // Ghi đè sự kiện click để chọn/bỏ chọn cả cặp ghế gốc
+                const cleanBtn = pairButton.cloneNode(true);
+                if (pairStatus === "available") {
+                    cleanBtn.addEventListener("click", () => {
+                        toggleSeatPair(left.code, right.code);
+                    });
+                }
+
+                rowElement.appendChild(cleanBtn);
+            }
+        } else {
+            rowSeats.forEach(seat => {
+                rowElement.appendChild(createSeatElement(seat));
+            });
+        }
 
         container.appendChild(rowElement);
     });
@@ -171,6 +233,33 @@ function renderSeatSelection() {
     if (typeof window.updateCheckoutButton === "function") {
         window.updateCheckoutButton();
     }
+}
+
+function toggleSeatPair(leftCode, rightCode) {
+    const leftSeat = seatState.seats.find(item => item.code === leftCode);
+    const rightSeat = seatState.seats.find(item => item.code === rightCode);
+
+    if (!leftSeat || !rightSeat || leftSeat.status !== "available" || rightSeat.status !== "available") {
+        return;
+    }
+
+    const isSelected =
+        seatState.selectedSeats.includes(leftCode) &&
+        seatState.selectedSeats.includes(rightCode);
+
+    if (isSelected) {
+        seatState.selectedSeats = seatState.selectedSeats.filter(
+            code => code !== leftCode && code !== rightCode
+        );
+    } else {
+        if (seatState.selectedSeats.length + 2 > MAX_SEATS) {
+            alert(`Bạn chỉ được chọn tối đa ${MAX_SEATS} ghế!`);
+            return;
+        }
+        seatState.selectedSeats.push(leftCode, rightCode);
+    }
+
+    renderSeatSelection();
 }
 
 // ==============================

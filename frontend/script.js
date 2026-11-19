@@ -658,7 +658,7 @@ function renderShowtimes() {
 
     if (SHOWTIMES_DATA.length === 0) {
         renderShowtimeMessage(
-            "Hiện chưa có suất chiếu cho phim và rạp này."
+            "Không có"
         );
         return;
     }

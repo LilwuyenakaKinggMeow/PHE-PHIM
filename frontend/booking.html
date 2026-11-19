@@ -248,6 +248,7 @@
     </footer>
 
     <!-- PAYMENT MODAL -->
+
     <div class="modal-backdrop" id="paymentModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -256,6 +257,16 @@
             </div>
 
             <div class="modal-body">
+                <p class="modal-subtitle">Thông tin khách hàng:</p>
+
+                <div class="customer-info-fields">
+                    <input type="text" id="customerName" class="customer-input" placeholder="Nhập họ và tên"
+                        autocomplete="name" required>
+
+                    <input type="email" id="customerEmail" class="customer-input" placeholder="Nhập địa chỉ email"
+                        autocomplete="email" required>
+                </div>
+
                 <p class="modal-subtitle">Chọn phương thức thanh toán trực tuyến:</p>
 
                 <div class="payment-methods">
@@ -315,6 +326,7 @@
             </button>
         </div>
     </div>
+
 
     <!-- E-TICKET MODAL -->
     <div class="modal-backdrop" id="ticketModal">

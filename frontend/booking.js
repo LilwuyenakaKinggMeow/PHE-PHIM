@@ -2,8 +2,10 @@
 "use strict";
 
 // ========================================
-// CẤU HÌNH THANH TOÁN
+// CẤU HÌNH
 // ========================================
+
+const BOOKING_API_URL = "http://localhost:3000/api/bookings";
 
 let selectedPaymentMethod = "momo";
 let isProcessingPayment = false;
@@ -22,7 +24,16 @@ function getTotalAmount() {
         )
         .reduce((total, seat) => total + seat.price, 0);
 }
-window.loadSeats();
+
+
+// ========================================
+// ĐỊNH DẠNG TIỀN
+// ========================================
+
+function formatCurrency(amount) {
+    return Number(amount).toLocaleString("vi-VN") + " đ";
+}
+
 
 // ========================================
 // CẬP NHẬT NÚT THANH TOÁN
@@ -37,19 +48,10 @@ function updateCheckoutButton() {
         window.seatState.selectedSeats.length > 0;
 
     const hasSelectedShowtime =
-        Boolean(window.selectedShowtime);
+        Boolean(window.selectedShowtimeId);
 
     checkoutBtn.disabled =
         !(hasSelectedSeats && hasSelectedShowtime);
-}
-
-
-// ========================================
-// ĐỊNH DẠNG TIỀN
-// ========================================
-
-function formatCurrency(amount) {
-    return amount.toLocaleString("vi-VN") + " đ";
 }
 
 
@@ -129,16 +131,19 @@ function setupPaymentMethods() {
 
 
 // ========================================
-// TẠO MÃ GIAO DỊCH
+// ĐỊNH DẠNG NGÀY CHIẾU
 // ========================================
 
-function generateTransactionCode() {
-    const randomCode = Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase();
+function formatShowDate(dateValue) {
+    if (!dateValue) return "";
 
-    return "PPH-" + Date.now().toString().slice(-6) + randomCode;
+    const date = new Date(`${dateValue}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+        return dateValue;
+    }
+
+    return date.toLocaleDateString("vi-VN");
 }
 
 
@@ -146,16 +151,13 @@ function generateTransactionCode() {
 // HIỂN THỊ VÉ ĐIỆN TỬ
 // ========================================
 
-function showETicket() {
+function showETicket(bookingData) {
     const ticketModal = document.getElementById("ticketModal");
 
     if (!ticketModal) return;
 
     const movie = window.selectedMovie;
-    const showtime = window.selectedShowtime;
     const cinemaSelect = document.getElementById("cinemaSelect");
-
-    const selectedSeats = window.seatState.selectedSeats;
 
     const movieTitle = document.getElementById("ticketMovieTitle");
     const cinemaName = document.getElementById("ticketCinemaName");
@@ -174,20 +176,27 @@ function showETicket() {
     }
 
     if (showtimeText) {
-        const today = new Date();
+        const selectedDate =
+            document.getElementById("showDate")?.value;
 
-        const dateText = today.toLocaleDateString("vi-VN");
+        const dateText = formatShowDate(selectedDate);
+
+        const timeText =
+            bookingData.startTime?.slice(0, 5) ||
+            window.selectedShowtime;
 
         showtimeText.textContent =
-            `${showtime} - ${dateText}`;
+            `${timeText} - ${dateText}`;
     }
 
     if (seatsText) {
-        seatsText.textContent = selectedSeats.join(", ");
+        seatsText.textContent = bookingData.seats
+            .map(seat => seat.code)
+            .join(", ");
     }
 
     if (codeText) {
-        codeText.textContent = generateTransactionCode();
+        codeText.textContent = bookingData.bookingCode;
     }
 
     closePaymentModal();
@@ -197,20 +206,67 @@ function showETicket() {
 
 
 // ========================================
-// XÁC NHẬN THANH TOÁN
+// XÁC NHẬN ĐẶT VÉ VỚI BACKEND
 // ========================================
 
-function confirmPayment() {
+async function confirmPayment() {
     if (isProcessingPayment) return;
 
-    const selectedSeats = window.seatState?.selectedSeats || [];
+    const confirmBtn =
+        document.getElementById("confirmPaymentBtn");
 
-    if (selectedSeats.length === 0 || !window.selectedShowtime) {
+    const customerName =
+        document.getElementById("customerName")?.value.trim();
+
+    const customerEmail =
+        document.getElementById("customerEmail")?.value.trim();
+
+    const selectedSeats =
+        window.seatState?.selectedSeats || [];
+
+    const showtimeId =
+        Number(window.selectedShowtimeId);
+
+    // Kiểm tra dữ liệu
+    if (!customerName) {
+        alert("Vui lòng nhập họ và tên!");
+        document.getElementById("customerName")?.focus();
+        return;
+    }
+
+    if (!customerEmail) {
+        alert("Vui lòng nhập email!");
+        document.getElementById("customerEmail")?.focus();
+        return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+        alert("Địa chỉ email không hợp lệ!");
+        document.getElementById("customerEmail")?.focus();
+        return;
+    }
+
+    if (!showtimeId || selectedSeats.length === 0) {
         alert("Vui lòng chọn ghế và suất chiếu!");
         return;
     }
 
-    const confirmBtn = document.getElementById("confirmPaymentBtn");
+    // Chuyển mã ghế thành ID trong database
+    const selectedSeatIds = window.seatState.seats
+        .filter(seat => selectedSeats.includes(seat.code))
+        .map(seat => seat.id);
+
+    if (selectedSeatIds.length !== selectedSeats.length) {
+        alert("Không thể xác định một hoặc nhiều ghế đã chọn. Vui lòng tải lại danh sách ghế.");
+        return;
+    }
+
+    const requestData = {
+        showtimeId,
+        customerName,
+        customerEmail,
+        seatIds: selectedSeatIds
+    };
 
     isProcessingPayment = true;
 
@@ -219,17 +275,46 @@ function confirmPayment() {
         confirmBtn.textContent = "Đang xử lý...";
     }
 
-    // Mô phỏng thanh toán thành công
-    setTimeout(() => {
-        showETicket();
+    try {
+        const response = await fetch(BOOKING_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
 
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Không thể đặt vé."
+            );
+        }
+
+        // Đặt vé thành công
+        showETicket(result.data);
+
+    } catch (error) {
+        console.error("Booking error:", error);
+
+        alert(error.message || "Có lỗi xảy ra khi đặt vé.");
+
+        // Nếu ghế đã được người khác đặt, tải lại trạng thái ghế
+        if (error.message.includes("khách khác đặt")) {
+            if (typeof window.loadSeats === "function") {
+                await window.loadSeats();
+            }
+        }
+
+    } finally {
         isProcessingPayment = false;
 
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = "Xác nhận thanh toán";
+            confirmBtn.textContent = "Xác Nhận Đã Chuyển Khoản";
         }
-    }, 1000);
+    }
 }
 
 
@@ -286,11 +371,20 @@ function setupModalBackdrop() {
 // ========================================
 
 function initBookingPayment() {
-    const checkoutBtn = document.getElementById("checkoutBtn");
-    const closePaymentBtn = document.getElementById("closePaymentModal");
-    const confirmBtn = document.getElementById("confirmPaymentBtn");
-    const closeTicketBtn = document.getElementById("closeTicketModal");
-    const finishBtn = document.getElementById("finishBookingBtn");
+    const checkoutBtn =
+        document.getElementById("checkoutBtn");
+
+    const closePaymentBtn =
+        document.getElementById("closePaymentModal");
+
+    const confirmBtn =
+        document.getElementById("confirmPaymentBtn");
+
+    const closeTicketBtn =
+        document.getElementById("closeTicketModal");
+
+    const finishBtn =
+        document.getElementById("finishBookingBtn");
 
     if (checkoutBtn) {
         checkoutBtn.addEventListener("click", openPaymentModal);
