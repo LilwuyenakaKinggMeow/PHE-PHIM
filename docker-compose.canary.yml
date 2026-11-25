@@ -1,0 +1,43 @@
+services:
+  backend-a:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phephim-backend-a
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: "3000"
+      DB_HOST: host.docker.internal
+      REDIS_URL: redis://host.docker.internal:6379
+      APP_VERSION: "A"
+      INSTANCE_NAME: "backend-a"
+    restart: unless-stopped
+
+  backend-b:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phephim-backend-b
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: "3000"
+      DB_HOST: host.docker.internal
+      REDIS_URL: redis://host.docker.internal:6379
+      APP_VERSION: "B"
+      INSTANCE_NAME: "backend-b"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: phephim-canary-nginx
+    ports:
+      - "8088:80"
+    volumes:
+      - ./nginx/canary.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend-a
+      - backend-b
+    restart: unless-stopped

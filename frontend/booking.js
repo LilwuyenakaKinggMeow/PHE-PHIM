@@ -5,7 +5,9 @@
 // CẤU HÌNH
 // ========================================
 
-const BOOKING_API_URL = "http://localhost:3000/api/bookings";
+const BOOKING_API_URL = "/api/bookings";
+const SEAT_LOCK_API_URL = "/api/seat-locks";
+const PAYMENT_API_URL = "/api/payments";
 
 let selectedPaymentMethod = "momo";
 let isProcessingPayment = false;
@@ -209,6 +211,7 @@ function showETicket(bookingData) {
 // XÁC NHẬN ĐẶT VÉ VỚI BACKEND
 // ========================================
 
+
 async function confirmPayment() {
     if (isProcessingPayment) return;
 
@@ -227,7 +230,7 @@ async function confirmPayment() {
     const showtimeId =
         Number(window.selectedShowtimeId);
 
-    // Kiểm tra dữ liệu
+    // 1. Kiểm tra thông tin khách hàng
     if (!customerName) {
         alert("Vui lòng nhập họ và tên!");
         document.getElementById("customerName")?.focus();
@@ -251,22 +254,15 @@ async function confirmPayment() {
         return;
     }
 
-    // Chuyển mã ghế thành ID trong database
+    // 2. Chuyển mã ghế thành ID database
     const selectedSeatIds = window.seatState.seats
         .filter(seat => selectedSeats.includes(seat.code))
         .map(seat => seat.id);
 
     if (selectedSeatIds.length !== selectedSeats.length) {
-        alert("Không thể xác định một hoặc nhiều ghế đã chọn. Vui lòng tải lại danh sách ghế.");
+        alert("Không thể xác định ghế đã chọn. Vui lòng tải lại danh sách ghế.");
         return;
     }
-
-    const requestData = {
-        showtimeId,
-        customerName,
-        customerEmail,
-        seatIds: selectedSeatIds
-    };
 
     isProcessingPayment = true;
 
@@ -276,34 +272,106 @@ async function confirmPayment() {
     }
 
     try {
-        const response = await fetch(BOOKING_API_URL, {
+        // 3. Khóa ghế bằng Redis
+        const lockResponse = await fetch(SEAT_LOCK_API_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(requestData)
+            body: JSON.stringify({
+                showtimeId,
+                seatIds: selectedSeatIds
+            })
         });
 
-        const result = await response.json();
+        const lockResult = await lockResponse.json();
 
-        if (!response.ok || !result.success) {
+        if (!lockResponse.ok || !lockResult.success) {
             throw new Error(
-                result.message || "Không thể đặt vé."
+                lockResult.message || "Không thể giữ ghế."
             );
         }
 
-        // Đặt vé thành công
-        showETicket(result.data);
+        const lockToken = lockResult.data.lockToken;
+
+        if (!lockToken) {
+            throw new Error("Không nhận được mã khóa ghế từ server.");
+        }
+
+        // 4. Tạo đơn đặt vé
+        const bookingResponse = await fetch(BOOKING_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                showtimeId,
+                customerName,
+                customerEmail,
+                seatIds: selectedSeatIds,
+                lockToken
+            })
+        });
+
+        const bookingResult = await bookingResponse.json();
+
+        if (!bookingResponse.ok || !bookingResult.success) {
+            throw new Error(
+                bookingResult.message || "Không thể tạo đơn đặt vé."
+            );
+        }
+
+        const bookingData = bookingResult.data;
+
+        // 5. Gọi API thanh toán giả lập
+        const paymentResponse = await fetch(
+            `${PAYMENT_API_URL}/${encodeURIComponent(bookingData.bookingCode)}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    lockToken,
+                    paymentMethod: selectedPaymentMethod,
+                    simulateFailure: false
+                })
+            }
+        );
+
+        const paymentResult = await paymentResponse.json();
+
+        if (
+            !paymentResponse.ok ||
+            !paymentResult.success ||
+            paymentResult.data?.status !== "confirmed"
+        ) {
+            throw new Error(
+                paymentResult.message || "Thanh toán không thành công."
+            );
+        }
+
+        // 6. Chỉ hiển thị vé sau khi thanh toán thành công
+        bookingData.status = paymentResult.data.status;
+
+        showETicket(bookingData);
+
+        // Cập nhật lại trạng thái ghế
+        if (typeof window.loadSeats === "function") {
+            await window.loadSeats();
+        }
 
     } catch (error) {
-        console.error("Booking error:", error);
+        console.error("Booking/Payment error:", error);
 
-        alert(error.message || "Có lỗi xảy ra khi đặt vé.");
+        alert(error.message || "Có lỗi xảy ra trong quá trình đặt vé.");
 
-        // Nếu ghế đã được người khác đặt, tải lại trạng thái ghế
-        if (error.message.includes("khách khác đặt")) {
-            if (typeof window.loadSeats === "function") {
+        // Cập nhật lại trạng thái ghế trên giao diện
+        if (typeof window.loadSeats === "function") {
+            try {
                 await window.loadSeats();
+            } catch (reloadError) {
+                console.error("Reload seats error:", reloadError);
             }
         }
 
@@ -312,10 +380,11 @@ async function confirmPayment() {
 
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = "Xác Nhận Đã Chuyển Khoản";
+            confirmBtn.textContent = "Thanh Toán";
         }
     }
 }
+
 
 
 // ========================================

@@ -4,11 +4,16 @@
 // CẤU HÌNH API
 // ==============================
 
-const API_URL = "http://localhost:3000/api/movies";
-const CINEMA_API_URL = "http://localhost:3000/api/cinemas";
-const SHOWTIME_API_URL = "http://localhost:3000/api/showtimes";
+const API_URL = "/api/movies";
+const CINEMA_API_URL = "/api/cinemas";
+const SHOWTIME_API_URL = "/api/showtimes";
 
-const today = new Date().toISOString().split("T")[0];
+const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+}).format(new Date());
 
 // ==============================
 // POSTER DỰ PHÒNG
@@ -813,7 +818,7 @@ function initTicketLookup() {
 
         try {
             const response = await fetch(
-                `http://localhost:3000/api/bookings/${encodeURIComponent(bookingCode)}`
+                `/api/bookings/${encodeURIComponent(bookingCode)}`
             );
 
             const data = await response.json();

@@ -3,12 +3,16 @@
 
 const pool = require("../config/database");
 const crypto = require("crypto");
+const {
+    verifySeatLock,
+    releaseSeatLock
+} = require("../services/seatLockService");
 
 // Giá vé được tính tại backend
 const SEAT_PRICES = {
     standard: 85000,
     vip: 115000,
-    sweetbox: 240000
+    sweetbox: 120000
 };
 
 // Tạo mã vé
@@ -18,12 +22,14 @@ function generateBookingCode() {
 }
 
 // POST /api/bookings
+
 const createBooking = async (req, res) => {
     const {
         showtimeId,
         customerName,
         customerEmail,
-        seatIds
+        seatIds,
+        lockToken
     } = req.body;
 
     // 1. Kiểm tra dữ liệu đầu vào
@@ -41,14 +47,27 @@ const createBooking = async (req, res) => {
     }
 
     const normalizedSeatIds = seatIds.map(Number);
+    const id = Number(showtimeId);
 
     if (
-        normalizedSeatIds.some(id => !Number.isInteger(id) || id <= 0) ||
+        normalizedSeatIds.some(seatId =>
+            !Number.isInteger(seatId) || seatId <= 0
+        ) ||
         new Set(normalizedSeatIds).size !== normalizedSeatIds.length
     ) {
         return res.status(400).json({
             success: false,
-            message: "Danh sách ghế không hợp lệ hoặc có ghế bị trùng."
+            message: "Danh sách ghế không hợp lệ hoặc bị trùng."
+        });
+    }
+
+    if (
+        typeof lockToken !== "string" ||
+        !/^[a-f0-9]{64}$/i.test(lockToken)
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "Token giữ ghế không hợp lệ."
         });
     }
 
@@ -76,12 +95,28 @@ const createBooking = async (req, res) => {
     let transactionStarted = false;
 
     try {
+        // 2. Xác minh token Redis cho toàn bộ ghế
+        for (const seatId of normalizedSeatIds) {
+            const valid = await verifySeatLock(
+                id,
+                seatId,
+                lockToken
+            );
+
+            if (!valid) {
+                return res.status(409).json({
+                    success: false,
+                    message: `Ghế ID ${seatId} không còn được bạn giữ hoặc thời gian giữ ghế đã hết.`
+                });
+            }
+        }
+
         client = await pool.connect();
 
         await client.query("BEGIN");
         transactionStarted = true;
 
-        // 2. Kiểm tra suất chiếu và thời gian
+        // 3. Kiểm tra suất chiếu
         const showtimeResult = await client.query(
             `SELECT
                 id,
@@ -96,7 +131,7 @@ const createBooking = async (req, res) => {
              FROM showtimes
              WHERE id = $1
              FOR SHARE`,
-            [Number(showtimeId)]
+            [id]
         );
 
         if (showtimeResult.rows.length === 0) {
@@ -117,11 +152,11 @@ const createBooking = async (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: "Suất chiếu đã bắt đầu hoặc đã qua giờ chiếu. Vui lòng chọn suất khác."
+                message: "Suất chiếu đã bắt đầu hoặc đã qua giờ chiếu."
             });
         }
 
-        // 3. Khóa các ghế được chọn
+        // 4. Khóa các dòng ghế trong PostgreSQL
         const seatsResult = await client.query(
             `SELECT id, cinema_id, seat_code, seat_type
              FROM seats
@@ -143,7 +178,7 @@ const createBooking = async (req, res) => {
 
         const seats = seatsResult.rows;
 
-        // 4. Kiểm tra ghế thuộc đúng rạp
+        // 5. Kiểm tra ghế thuộc đúng rạp
         const invalidCinemaSeat = seats.some(
             seat => Number(seat.cinema_id) !== Number(showtime.cinema_id)
         );
@@ -154,11 +189,11 @@ const createBooking = async (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: "Có ghế không thuộc rạp của suất chiếu này."
+                message: "Có ghế không thuộc rạp của suất chiếu."
             });
         }
 
-        // 5. Kiểm tra ghế đã được đặt chưa
+        // 6. Kiểm tra ghế đã được xác nhận đặt chưa
         const bookedResult = await client.query(
             `SELECT bs.seat_id
              FROM booking_seats bs
@@ -166,7 +201,7 @@ const createBooking = async (req, res) => {
              WHERE b.showtime_id = $1
                AND b.status = 'confirmed'
                AND bs.seat_id = ANY($2::int[])`,
-            [Number(showtimeId), normalizedSeatIds]
+            [id, normalizedSeatIds]
         );
 
         if (bookedResult.rows.length > 0) {
@@ -175,14 +210,39 @@ const createBooking = async (req, res) => {
 
             return res.status(409).json({
                 success: false,
-                message: "Một hoặc nhiều ghế vừa được khách khác đặt. Vui lòng chọn lại ghế.",
+                message: "Một hoặc nhiều ghế đã được khách khác đặt.",
                 bookedSeatIds: bookedResult.rows.map(row => row.seat_id)
             });
         }
 
-        // 6. Tính tiền tại backend
+        // 7. Kiểm tra lại token sau khi đã khóa dòng ghế
+        for (const seatId of normalizedSeatIds) {
+            const valid = await verifySeatLock(
+                id,
+                seatId,
+                lockToken
+            );
+
+            if (!valid) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+
+                return res.status(409).json({
+                    success: false,
+                    message: "Thời gian giữ ghế đã hết. Vui lòng chọn lại ghế."
+                });
+            }
+        }
+
+        // 8. Tính giá vé tại backend
         const bookingSeats = seats.map(seat => {
-            const price = SEAT_PRICES[seat.seat_type];
+            // Hàng H là ghế Sweetbox
+            const isSweetbox = seat.seat_code.startsWith("H");
+
+            // Giá tính trên từng ghế vật lý
+            const price = isSweetbox
+                ? SEAT_PRICES.sweetbox
+                : SEAT_PRICES[seat.seat_type];
 
             if (!price) {
                 throw new Error(
@@ -193,7 +253,7 @@ const createBooking = async (req, res) => {
             return {
                 id: seat.id,
                 code: seat.seat_code,
-                type: seat.seat_type,
+                type: isSweetbox ? "sweetbox" : seat.seat_type,
                 price
             };
         });
@@ -203,7 +263,7 @@ const createBooking = async (req, res) => {
             0
         );
 
-        // 7. Tạo đơn đặt vé
+        // 9. Tạo booking ở trạng thái pending
         const bookingCode = generateBookingCode();
 
         const bookingResult = await client.query(
@@ -215,7 +275,7 @@ const createBooking = async (req, res) => {
                 total_amount,
                 status
              )
-             VALUES ($1, $2, $3, $4, $5, 'confirmed')
+             VALUES ($1, $2, $3, $4, $5, 'pending')
              RETURNING id, booking_code, customer_name,
                        customer_email, showtime_id,
                        total_amount, status, created_at`,
@@ -223,14 +283,14 @@ const createBooking = async (req, res) => {
                 bookingCode,
                 customerName.trim(),
                 customerEmail.trim(),
-                Number(showtimeId),
+                id,
                 totalAmount
             ]
         );
 
         const booking = bookingResult.rows[0];
 
-        // 8. Lưu từng ghế vào booking_seats
+        // 10. Lưu các ghế vào booking_seats
         for (const seat of bookingSeats) {
             await client.query(
                 `INSERT INTO booking_seats (
@@ -243,13 +303,13 @@ const createBooking = async (req, res) => {
             );
         }
 
-        // 9. Hoàn tất transaction
+        // 11. Hoàn tất transaction
         await client.query("COMMIT");
         transactionStarted = false;
 
         return res.status(201).json({
             success: true,
-            message: "Đặt vé thành công.",
+            message: "Tạo đơn đặt vé thành công. Vui lòng thanh toán.",
             data: {
                 bookingId: booking.id,
                 bookingCode: booking.booking_code,
@@ -270,6 +330,11 @@ const createBooking = async (req, res) => {
             await client.query("ROLLBACK").catch(() => { });
         }
 
+        // Nếu tạo booking lỗi, giải phóng những khóa thuộc token này
+        for (const seatId of normalizedSeatIds) {
+            await releaseSeatLock(id, seatId, lockToken).catch(() => { });
+        }
+
         console.error("Create booking error:", error.message);
 
         return res.status(500).json({
@@ -283,6 +348,7 @@ const createBooking = async (req, res) => {
         }
     }
 };
+
 
 // GET /api/bookings/:bookingCode
 const getBookingByCode = async (req, res) => {

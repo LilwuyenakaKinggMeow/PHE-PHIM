@@ -12,7 +12,7 @@ const SEAT_CONFIG = {
 };
 
 const MAX_SEATS = 6;
-const SEAT_API_URL = "http://localhost:3000/api/seats";
+const SEAT_API_URL = "/api/seats";
 
 // ==============================
 // TRẠNG THÁI GHẾ
