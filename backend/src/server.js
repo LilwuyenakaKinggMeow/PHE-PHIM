@@ -43,8 +43,8 @@ async function startServer() {
     try {
         await redisClient.connect();
 
-        app.listen(PORT, () => {
-            console.log(`PHE PHIM Backend running at http://localhost:${PORT}`);
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log(`PHE PHIM Backend running on port ${PORT}`);
         });
     } catch (error) {
         console.error("Failed to start server:", error.message);

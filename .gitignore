@@ -17,3 +17,9 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+.neon
+
+# Neon CLI local configuration
+/neon.ts
+/package.json
+/package-lock.json
